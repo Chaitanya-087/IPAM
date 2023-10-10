@@ -30,15 +30,13 @@
 
 - [9. Deployment](#9-deployment)
 
-- [10. Maintenance](#10-maintenance)
-
 ## 1. Introduction
 
 ### 1.1 Purpose
 The purpose of the IPAM (IP Address Management) project is to develop a Java application for tracking and managing IP addresses, including both individual addresses and address ranges. The system aims to efficiently allocate, reserve, and free up IP addresses while providing a user-friendly interface.
 
 ### 1.2 Scope
-The scope of this project includes the development of a Java application using Java 11 and Spring Boot 2.7.13 for the backend, and a React-based user interface for the frontend. The application will allow users to manage individual IP addresses and IP address ranges, track their status (assigned, free, reserved), and enforce business logic for freeing up reserved addresses.
+The scope of this project includes the development of a Java application using Java 17 and Spring Boot 3 for the backend, and a React-based user interface for the frontend. The application will allow users to manage individual IP addresses and IP address ranges, track their status (assigned, free, reserved), and enforce business logic for freeing up reserved addresses.
 
 ### 1.3 Document Conventions
 This document follows Markdown (.md) format for readability and simplicity.
@@ -99,7 +97,3 @@ This document follows Markdown (.md) format for readability and simplicity.
 ## 9. Deployment
 
 (Explain how the system will be deployed.)
-
-## 10. Maintenance
-
-(Outline plans for system maintenance and updates.)
