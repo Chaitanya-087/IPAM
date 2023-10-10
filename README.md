@@ -4,8 +4,7 @@
 - [1. Introduction](#1-introduction)
   - [1.1 Purpose](#11-purpose)
   - [1.2 Scope](#12-scope)
-  - [1.3 Document Conventions](#13-document-conventions)
-  - [1.4 References](#14-references)
+  - [1.3 References](#14-references)
 
 - [2. Functional Requirements](#2-functional-requirements)
   - [2.1 Tracking Individual IP Addresses](#21-tracking-individual-ip-addresses)
@@ -38,10 +37,7 @@ The purpose of the IPAM (IP Address Management) project is to develop a Java app
 ### 1.2 Scope
 The scope of this project includes the development of a Java application using Java 17 and Spring Boot 3 for the backend, and a React-based user interface for the frontend. The application will allow users to manage individual IP addresses and IP address ranges, track their status (assigned, free, reserved), and enforce business logic for freeing up reserved addresses.
 
-### 1.3 Document Conventions
-This document follows Markdown (.md) format for readability and simplicity.
-
-### 1.4 References
+### 1.3 References
 - [What is IPAM? | IP Address Management Solutions - ManageEngine OpManager](https://www.manageengine.com/products/oputils/what-is-ipam.html)
 
 ## 2. Functional Requirements
@@ -65,7 +61,7 @@ This document follows Markdown (.md) format for readability and simplicity.
 ## 3. Non-Functional Requirements
 
 ### 3.1 Technology Stack
-- Backend: Java 11, Spring Boot 2.7.13
+- Backend: Java 17, Spring Boot 3
 - Frontend: React for the user interface
 
 ### 3.2 User Interface
