@@ -42,7 +42,7 @@ The scope of this project includes the development of a Java application using J
 This document follows Markdown (.md) format for readability and simplicity.
 
 ### 1.4 References
-- [What is IPAM? | IP Address Management Solutions - ManageEngine OpManager](Reference URL)
+- [What is IPAM? | IP Address Management Solutions - ManageEngine OpManager](https://teams.microsoft.com/l/message/19:7c68cc60-f3e4-4a7c-9fac-0df91280121e_8375af3b-4809-4a4f-8a94-8781f2e28da4@unq.gbl.spaces/1696912848613?context=%7B%22contextType%22%3A%22chat%22%7D)
 
 ## 2. Functional Requirements
 
