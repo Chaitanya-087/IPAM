@@ -6,15 +6,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
-import java.util.Date;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 @Data
-@Table(name = "ip_addresses")
+@Table(name = "ipAddresses")
 @Entity
-public class IpAddress {
+public class IPAddress {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,8 +24,8 @@ public class IpAddress {
   private String deviceName;
 
   @CreationTimestamp
-  private Instant createdAt; // Name of the device using the IP
+  private Instant createdAt;
 
   @UpdateTimestamp
-  private Instant updatedAt; // Last time the IP was updated
+  private Instant updatedAt;
 }

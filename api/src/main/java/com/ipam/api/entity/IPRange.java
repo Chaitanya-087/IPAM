@@ -1,5 +1,6 @@
 package com.ipam.api.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -10,7 +11,7 @@ import java.util.List;
 import lombok.Data;
 
 @Entity
-@Table(name = "ip_range")
+@Table(name = "ipRanges")
 @Data
 public class IPRange {
 
@@ -22,6 +23,6 @@ public class IPRange {
   private String endAddress;
   private String status;
 
-  @OneToMany(mappedBy = "ipRange")
-  private List<IpAddress> ipAddresses;
+  @OneToMany(cascade = CascadeType.ALL)
+  private List<IPAddress> ipAddresses;
 }

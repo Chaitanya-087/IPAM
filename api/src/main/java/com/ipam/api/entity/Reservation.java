@@ -20,12 +20,12 @@ public class Reservation {
   private Long id;
 
   @ManyToOne
-  @JoinColumn(name = "user_id")
+  @JoinColumn(name = "userId")
   private User user;
 
   @ManyToOne
-  @JoinColumn(name = "ip_address_id")
-  private IpAddress ipAddress;
+  @JoinColumn(name = "ipAddressId")
+  private IPAddress ipAddress;
 
   private Date reservationDate;
   private Date releaseDate;

@@ -11,7 +11,7 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "dns_records")
+@Table(name = "dnsRecords")
 public class DNSRecord {
 
   @Id
@@ -20,10 +20,8 @@ public class DNSRecord {
 
   private String hostname;
   private String recordType; // e.g., A, CNAME, PTR
-
-  // Other DNS-related fields
-
+  
   @ManyToOne
-  @JoinColumn(name = "ip_address_id")
-  private IpAddress ipAddress;
+  @JoinColumn(name = "ipAddressId")
+  private IPAddress ipAddress;
 }

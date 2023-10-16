@@ -2,6 +2,7 @@ package com.ipam.api.entity;
 
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,13 +20,12 @@ public class Subnet {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  private String subnetName; // Name or description of the subnet
+  private String subnetName; 
   private String subnetCIDR; // CIDR notation, e.g., "192.168.1.0/24"
   private String subnetMask; // Subnet mask
   private String gateway; // Default gateway for the subnet
-  private String status; // Available, In Use, Reserved
-  // Other fields for metadata
-
-  @OneToMany(mappedBy = "subnet")
-  private List<IpAddress> ipAddresses;
+  private String status;
+  
+  @OneToMany(cascade = CascadeType.ALL)
+  private List<IPAddress> ipAddresses;
 }
