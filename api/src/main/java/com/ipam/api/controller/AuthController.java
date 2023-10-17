@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ipam.api.dto.JwtResponse;
 import com.ipam.api.dto.LoginBody;
 import com.ipam.api.dto.MessageResponse;
+import com.ipam.api.dto.SignupBody;
 import com.ipam.api.entity.User;
 import com.ipam.api.security.UserService;
 
@@ -62,22 +65,22 @@ public class AuthController {
                         .map(GrantedAuthority::getAuthority)
                         .collect(Collectors.joining(" ")));
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok().body(response);
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<MessageResponse> registerUser(@RequestBody User signUpRequest) {
+    public ResponseEntity<MessageResponse> registerUser(@RequestBody SignupBody signUpRequest) {
         try {
-            if (userService.existsByName(signUpRequest.getName())) {
+            if (userService.existsByName(signUpRequest.getUsername())) {
                 return ResponseEntity.badRequest()
                         .body(new MessageResponse("Error: Username is already taken!"));
             }
             User user = new User();
-            user.setName(signUpRequest.getName());
+            user.setName(signUpRequest.getUsername());
             user.setEmail(signUpRequest.getEmail());
             user.setPassword(signUpRequest.getPassword());
             userService.create(user);
-            return ResponseEntity.ok().body(new MessageResponse("User registered successfully!"));
+            return ResponseEntity.status(HttpStatus.CREATED).body(new MessageResponse("User registered successfully!"));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(new MessageResponse("Error: " + e.getMessage()));
