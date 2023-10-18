@@ -19,11 +19,11 @@ import jakarta.transaction.Transactional;
 public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired
-    private UserService userService;
+    private DomainUserService userService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        var myUserEntityOpt = userService.getByName(username);
+        var myUserEntityOpt = userService.findByName(username);
         if (myUserEntityOpt.isEmpty()) {
             throw new UsernameNotFoundException("No user found with username " + username);
         }

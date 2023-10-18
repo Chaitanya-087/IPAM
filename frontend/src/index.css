@@ -1,0 +1,31 @@
+*,
+*::after,
+*::before {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    font-family: 'Rubik', sans-serif;
+    background-color: hsl(228, 33%, 97%);
+}
+
+::-webkit-scrollbar {
+    width: 0;
+}
+
+main {
+    min-height: 100vh;
+    scroll-behavior: smooth;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+ul {
+    list-style: none;
+}

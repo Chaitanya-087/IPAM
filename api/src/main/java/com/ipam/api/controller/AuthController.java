@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,7 +23,7 @@ import com.ipam.api.dto.LoginBody;
 import com.ipam.api.dto.MessageResponse;
 import com.ipam.api.dto.SignupBody;
 import com.ipam.api.entity.User;
-import com.ipam.api.security.UserService;
+import com.ipam.api.security.DomainUserService;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -37,7 +36,7 @@ public class AuthController {
     AuthenticationManager authenticationManager;
 
     @Autowired
-    UserService userService;
+    DomainUserService userService;
 
     @PostMapping("/token")
     public ResponseEntity<JwtResponse> token(@RequestBody LoginBody loginBody) {
@@ -60,10 +59,9 @@ public class AuthController {
                 .build();
 
         JwtResponse response = new JwtResponse(
+                userService.findByName(username).get().getId(),
                 jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue(),
-                authentication.getName(), authentication.getAuthorities().stream()
-                        .map(GrantedAuthority::getAuthority)
-                        .collect(Collectors.joining(" ")));
+                authentication.getName());
 
         return ResponseEntity.ok().body(response);
     }

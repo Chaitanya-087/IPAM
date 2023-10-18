@@ -1,11 +1,22 @@
 package com.ipam.api.controller;
 
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ipam.api.dto.LoginBody;
+import com.ipam.api.dto.SignupBody;
+import com.ipam.api.entity.User;
+import com.ipam.api.repository.UserRepository;
+import com.ipam.api.security.DomainUserService;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -16,76 +27,106 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.jdbc.Sql;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ipam.api.TUserRepository;
-import com.ipam.api.dto.LoginBody;
-import com.ipam.api.dto.SignupBody;
-import com.ipam.api.security.UserService;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.util.Collections;
-import java.util.List;
+import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.shaded.org.bouncycastle.jcajce.provider.keystore.BC;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ExtendWith(MockitoExtension.class)
+@Testcontainers
 public class AuthControllerTests {
 
-        @Autowired
-        private MockMvc mockMvc;
+  @Container
+  private static MySQLContainer<?> mySQLContainer = new MySQLContainer<>(
+    "mysql:latest"
+  );
 
-        @MockBean
-        private UserService userService;
+  @Autowired
+  private MockMvc mockMvc;
 
-        @MockBean
-        private AuthenticationManager authenticationManager;
+  @MockBean
+  private DomainUserService userService;
 
-        @Autowired
-        private ObjectMapper objectMapper;
 
-        @Test
-        void registeringUser() throws Exception {
-                SignupBody signupBody = SignupBody.builder()
-                                .username("test")
-                                .password("test123")
-                                .email("test123@gmail.com").build();
+  private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-                mockMvc.perform(post("/api/auth/signup").contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(signupBody)))
-                                .andExpect(status().isCreated())
-                                .andExpect(jsonPath("$.message").value("User registered successfully!"));                
-        }
+  @Autowired
+  private UserRepository userRepository;
 
-        @Test
-        public void testUserAuthentication() throws Exception {
-                LoginBody loginBody = new LoginBody("testUser", "testPassword");
+  @MockBean
+  private AuthenticationManager authenticationManager;
 
-                List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
-                Authentication auth = new UsernamePasswordAuthenticationToken("testUser", "testPassword", authorities);
+  @Autowired
+  private ObjectMapper objectMapper;
 
-                when(authenticationManager
-                                .authenticate(new UsernamePasswordAuthenticationToken("testUser", "testPassword")))
-                                .thenReturn(auth);
-                SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-                securityContext.setAuthentication(auth);
-                SecurityContextHolder.setContext(securityContext);
+  @Test
+  void registeringUser() throws Exception {
+    SignupBody signupBody = SignupBody
+      .builder()
+      .username("test")
+      .password("test123")
+      .email("test123@gmail.com")
+      .build();
 
-                mockMvc.perform(MockMvcRequestBuilders
-                                .post("/api/auth/token")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(loginBody)))
-                                .andExpect(status().isOk())
-                                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                                .andExpect(jsonPath("$.token").isNotEmpty());
+    mockMvc
+      .perform(
+        post("/api/auth/signup")
+          .contentType(MediaType.APPLICATION_JSON)
+          .content(objectMapper.writeValueAsString(signupBody))
+      )
+      .andExpect(status().isCreated())
+      .andExpect(jsonPath("$.message").value("User registered successfully!"));
 
-        }
+      Optional<User> userOptional = userRepository.findByName("test");
 
+      if (userOptional.isPresent()) {
+          // User found, print the password
+          System.out.println(userOptional.get().getPassword());
+      } else {
+          // User not found, handle this case accordingly
+          System.out.println("User 'test' not found in the database.");
+      }
+  }
+
+
+  @Test
+  public void testUserAuthentication() throws Exception {
+    LoginBody loginBody = new LoginBody("testUser", "testPassword");
+
+    List<GrantedAuthority> authorities = Collections.singletonList(
+      new SimpleGrantedAuthority("ROLE_USER")
+    );
+    Authentication auth = new UsernamePasswordAuthenticationToken(
+      "testUser",
+      "testPassword",
+      authorities
+    );
+
+    when(
+      authenticationManager.authenticate(
+        new UsernamePasswordAuthenticationToken("testUser", "testPassword")
+      )
+    )
+      .thenReturn(auth);
+    SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+    securityContext.setAuthentication(auth);
+    SecurityContextHolder.setContext(securityContext);
+
+    mockMvc
+      .perform(
+        MockMvcRequestBuilders
+          .post("/api/auth/token")
+          .contentType(MediaType.APPLICATION_JSON)
+          .content(objectMapper.writeValueAsString(loginBody))
+      )
+      .andExpect(status().isOk())
+      .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+      .andExpect(jsonPath("$.token").isNotEmpty());
+  }
 }

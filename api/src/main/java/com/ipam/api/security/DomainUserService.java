@@ -11,12 +11,12 @@ import com.ipam.api.entity.User;
 import com.ipam.api.repository.UserRepository;
 
 @Service
-public class UserService {
+public class DomainUserService {
 
     private UserRepository userRepository;
     private BCryptPasswordEncoder passwordEncoder;
 
-    public UserService(@Autowired UserRepository userRepository) {
+    public DomainUserService(@Autowired UserRepository userRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = new BCryptPasswordEncoder();
     }
@@ -45,7 +45,7 @@ public class UserService {
         return userRepository.existsByName(name);
     }
 
-    public Optional<User> getByName(String name) {
+    public Optional<User> findByName(String name) {
         return userRepository.findByName(name);
     }
 

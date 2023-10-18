@@ -68,7 +68,7 @@ public class SecurityConfiguration {
                             return corsConfiguration;
                         }))
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/api/auth/**",  "/api/cycles/**", "/v3/api-docs/**", "/swagger-ui.html",
+                        .requestMatchers("/api/auth/**",  "/api/ipam/**", "/v3/api-docs/**", "/swagger-ui.html",
                                 "/swagger-ui/**", "/actuator/**")
                         .permitAll().anyRequest().authenticated())
                 .oauth2ResourceServer(
