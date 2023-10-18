@@ -87,4 +87,5 @@ public class AuthControllerTests {
                                 .andExpect(jsonPath("$.token").isNotEmpty());
 
         }
+
 }
