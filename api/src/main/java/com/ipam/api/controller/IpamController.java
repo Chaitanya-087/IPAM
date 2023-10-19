@@ -1,14 +1,13 @@
 package com.ipam.api.controller;
 
-import com.ipam.api.dto.IPAddressRequest;
 import com.ipam.api.dto.IPRangeDTO;
-import com.ipam.api.dto.IPRangeRequest;
 import com.ipam.api.dto.MessageResponse;
-import com.ipam.api.dto.ReservationRequest;
 import com.ipam.api.dto.SubnetDTO;
-import com.ipam.api.dto.SubnetRequest;
 import com.ipam.api.dto.UserDTO;
 import com.ipam.api.entity.IPAddress;
+import com.ipam.api.entity.IPRange;
+import com.ipam.api.entity.Reservation;
+import com.ipam.api.entity.Subnet;
 import com.ipam.api.service.IPAddressService;
 import com.ipam.api.service.IPRangeService;
 import com.ipam.api.service.ReservationService;
@@ -16,6 +15,7 @@ import com.ipam.api.service.SubnetService;
 import com.ipam.api.service.UserService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,28 +46,28 @@ public class IpamController {
 
   //get all users (ADMIN)
   @GetMapping("/users")
-  // @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
+  @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
   public List<UserDTO> getUsers() {
     return userService.getAllUsers();
   }
 
   //add ipaddress to pool (ADMIN)
   @PostMapping("/ipaddresses")
-  // @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
-  public IPAddress addIpAddress(@RequestBody IPAddressRequest body) {
-    return ipAddressService.save(body);
+  @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
+  public ResponseEntity<IPAddress> addIpAddress(@RequestBody IPAddress body) {
+    return ResponseEntity.status(HttpStatus.CREATED).body(ipAddressService.save(body));
   }
 
   //get all ipaddresses (ADMIN)
   @GetMapping("/ipaddresses")
-  // @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
+  @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
   public List<IPAddress> getIpAddresses() {
     return ipAddressService.findAll();
   }
 
   //get all ipaddresses by user (USER)
   @GetMapping("/users/{userId}/ipaddresses")
-  // @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
+  @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
   public List<IPAddress> getIpAddressesByUser(@PathVariable("userId") Long userId) {
     return ipAddressService.findByUserId(userId);
   }
@@ -79,12 +79,12 @@ public class IpamController {
   }
 
   @PostMapping("/reserve/network-object/{id}")
-  public ResponseEntity<MessageResponse> reserveIPAddress(@PathVariable("id") Long id, @RequestBody ReservationRequest body) {
-    return ResponseEntity.ok().body(new MessageResponse(reservationService.reserveIP(id, body)));
+  public ResponseEntity<MessageResponse> reserveIPAddress(@PathVariable("id") Long id, @RequestBody Reservation body) {
+    return ResponseEntity.ok().body(new MessageResponse(reservationService.reserve(id, body)));
   }
 
   @PostMapping("/ipranges")
-  public IPRangeDTO addIPRange(@RequestBody IPRangeRequest body) {
+  public IPRangeDTO addIPRange(@RequestBody IPRange body) {
     return ipRangeService.save(body);
   }
   
@@ -104,7 +104,7 @@ public class IpamController {
   }
 
   @PostMapping("/subnets")
-  public SubnetDTO addSubnet(@RequestBody SubnetRequest body) {
+  public SubnetDTO addSubnet(@RequestBody Subnet body) {
     return subnetService.save(body);
   }
 

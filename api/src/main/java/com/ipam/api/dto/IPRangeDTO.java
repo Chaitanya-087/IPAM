@@ -5,9 +5,11 @@ import java.time.LocalDateTime;
 import com.ipam.api.entity.Status;
 import com.ipam.api.entity.User;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class IPRangeDTO {
     private Long id;
     private String startAddress;

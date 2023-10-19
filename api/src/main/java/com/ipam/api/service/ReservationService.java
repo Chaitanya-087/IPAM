@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.ipam.api.dto.ReservationRequest;
 import com.ipam.api.entity.NetworkObject;
 import com.ipam.api.entity.Reservation;
 import com.ipam.api.entity.Status;
@@ -22,7 +21,7 @@ public class ReservationService {
     @Autowired
     private NetworkObjectRepository networkObjectsRepository;
 
-    public String reserveIP(Long id,ReservationRequest body) {
+    public String reserve(Long id,Reservation body) {
         Reservation reservation = new Reservation();
         Optional<NetworkObject> networkObjectOpt = networkObjectsRepository.findById(id);
         if (networkObjectOpt.isPresent() && networkObjectOpt.get().getStatus().equals(Status.AVAILABLE)) {

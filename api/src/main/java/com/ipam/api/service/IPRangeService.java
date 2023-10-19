@@ -1,7 +1,6 @@
 package com.ipam.api.service;
 
 import com.ipam.api.dto.IPRangeDTO;
-import com.ipam.api.dto.IPRangeRequest;
 import com.ipam.api.entity.IPRange;
 import com.ipam.api.entity.Status;
 import com.ipam.api.entity.User;
@@ -24,7 +23,7 @@ public class IPRangeService {
   @Autowired
   private UserRepository userRepository;
 
-  public IPRangeDTO save(IPRangeRequest body) {
+  public IPRangeDTO save(IPRange body) {
     IPRange ipRange = new IPRange();
     ipRange.setStartAddress(body.getStartAddress());
     ipRange.setEndAddress(body.getEndAddress());

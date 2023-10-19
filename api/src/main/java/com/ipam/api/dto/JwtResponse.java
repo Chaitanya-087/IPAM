@@ -1,8 +1,10 @@
 package com.ipam.api.dto;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class JwtResponse {
     private Long id;
     private String token;

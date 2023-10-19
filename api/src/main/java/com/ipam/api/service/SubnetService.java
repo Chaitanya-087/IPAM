@@ -1,7 +1,6 @@
 package com.ipam.api.service;
 
 import com.ipam.api.dto.SubnetDTO;
-import com.ipam.api.dto.SubnetRequest;
 import com.ipam.api.entity.Status;
 import com.ipam.api.entity.Subnet;
 import com.ipam.api.entity.User;
@@ -24,7 +23,7 @@ public class SubnetService {
   @Autowired
   private UserRepository userRepository;
 
-  public SubnetDTO save(SubnetRequest body) {
+  public SubnetDTO save(Subnet body) {
     Subnet subnet = new Subnet();
     subnet.setName(body.getName());
     subnet.setCidr(body.getCidr());

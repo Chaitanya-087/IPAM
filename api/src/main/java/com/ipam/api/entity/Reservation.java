@@ -10,16 +10,12 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Entity
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Table(name = "reservations")
 public class Reservation {
 
@@ -30,8 +26,6 @@ public class Reservation {
   @ManyToOne(cascade = {CascadeType.DETACH, CascadeType.MERGE})
   @JoinColumn(name = "networkObjectId")
   private NetworkObject networkObject;
-
-  @Builder.Default
   private LocalDateTime releaseDate = LocalDateTime.now().plusHours(1);
   private String purpose;
 }

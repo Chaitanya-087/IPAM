@@ -1,6 +1,5 @@
 package com.ipam.api.service;
 
-import com.ipam.api.dto.IPAddressRequest;
 import com.ipam.api.entity.IPAddress;
 import com.ipam.api.entity.Status;
 import com.ipam.api.entity.User;
@@ -10,7 +9,6 @@ import com.ipam.api.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,7 +22,7 @@ public class IPAddressService {
   @Autowired
   private UserRepository userRepository;
 
-  public IPAddress save(IPAddressRequest body) {
+  public IPAddress save(IPAddress body) {
     IPAddress ipAddress = new IPAddress();
     ipAddress.setAddress(body.getAddress());
     return ipAddressRepository.save(ipAddress);
