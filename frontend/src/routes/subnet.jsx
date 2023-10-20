@@ -1,18 +1,24 @@
-import {useState, useEffect} from "react";
+import { useState, useEffect } from "react";
 import useAuth from "../hooks/useAuth";
 import instance from "../api/axios";
-import DataTable from "../components/Table";
-import {Backdrop, Box, Button, Container, Fade, IconButton, Modal, Paper, TextField, Typography} from "@mui/material";
+import { Backdrop, Box, Button, Container, Fade, IconButton, Modal, Paper, TextField, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TablePagination from '@mui/material/TablePagination';
+import TableRow from '@mui/material/TableRow';
 
 const columns = [
-    {id: "id", label: "ID", minWidth: 100},
-    {id: "name", label: "Name", minWidth: 170},
-    {id: "cidr", label: "CIDR", minWidth: 170},
-    {id: "mask", label: "Mask", minWidth: 100},
-    {id: "gateway", label: "Gateway", minWidth: 170},
-    {id: "size", label: "Size", minWidth: 100},
-    {id: "status", label: "Status", minWidth: 100},
+    { id: "id", label: "ID", minWidth: 100 },
+    { id: "name", label: "Name", minWidth: 170 },
+    { id: "cidr", label: "CIDR", minWidth: 170 },
+    { id: "mask", label: "Mask", minWidth: 100 },
+    { id: "gateway", label: "Gateway", minWidth: 170 },
+    { id: "size", label: "Size", minWidth: 100 },
+    { id: "status", label: "Status", minWidth: 100 },
     {
         id: "expiration",
         label: "Expiration",
@@ -45,8 +51,19 @@ const style = {
 };
 
 export default function SubnetsTable() {
-    const [data, setData] = useState([]);
-    const {authState, getRole} = useAuth();
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(+event.target.value);
+        setPage(0);
+    };
+    const [rows, setRows] = useState([]);
+    const { authState, getRole } = useAuth();
     const [open, setOpen] = useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -76,11 +93,8 @@ export default function SubnetsTable() {
                 },
             }
         );
-        console.log(res);
-        if (res.status === 201) {
-            fetchData();
-            handleClose();
-        }
+        fetchData();
+        handleClose();
     };
 
     const fetchData = async () => {
@@ -91,7 +105,7 @@ export default function SubnetsTable() {
                     Authorization: "Bearer " + authState?.token,
                 },
             });
-            setData(response.data);
+            setRows(response.data);
             console.log(response.data);
         } catch (error) {
             console.error("Error fetching data:", error);
@@ -103,7 +117,7 @@ export default function SubnetsTable() {
     }, []);
 
     return (
-        <Container sx={{display: "flex", flexDirection: "column"}}>
+        <Container sx={{ display: "flex", flexDirection: "column" }}>
             <Paper
                 sx={{
                     width: "100%",
@@ -124,14 +138,62 @@ export default function SubnetsTable() {
                     ""
                 )}
             </Paper>
-            <DataTable columns={columns} rows={data} />
+            <Paper sx={{ width: '100%', overflow: 'hidden', borderRadius: "0", backgroundColor: "transparent", boxShadow: "none", border: "1px solid #e6e6e6" }}>
+                <TableContainer sx={{ maxHeight: 440, overflow: 'auto' }}>
+                    <Table stickyHeader aria-label="sticky table">
+                        <TableHead>
+                            <TableRow>
+                                {columns.map((column) => (
+                                    <TableCell
+                                        key={column.id}
+                                        align={column.align}
+                                        style={{ minWidth: column.minWidth }}
+                                    >
+                                        {column.label}
+                                    </TableCell>
+                                ))
+                                }
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {rows
+                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                .map((row) => {
+                                    return (
+                                        <TableRow hover role="checkbox" tabIndex={-1} key={row.id}>
+                                            {columns.map((column) => {
+                                                const value = row[column.id];
+                                                return (
+                                                    <TableCell key={column.id} align={column.align}>
+                                                        {column.format
+                                                            ? column.format(value)
+                                                            : value}
+                                                    </TableCell>
+                                                );
+                                            })}
+                                        </TableRow>
+                                    );
+                                })}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+                <TablePagination
+                    rowsPerPageOptions={[10, 25, 100]}
+                    component="div"
+                    count={rows.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                />
+            </Paper>
             <Modal
                 aria-labelledby='transition-modal-title'
                 aria-describedby='transition-modal-description'
                 open={open}
                 onClose={handleClose}
                 closeAfterTransition
-                slots={{backdrop: Backdrop}}
+                slots={{ backdrop: Backdrop }}
                 slotProps={{
                     backdrop: {
                         timeout: 500,
@@ -143,38 +205,38 @@ export default function SubnetsTable() {
                             Add Subnet
                         </Typography>
                         <TextField
-                            sx={{width: "100%", marginBottom: "1rem"}}
+                            sx={{ width: "100%", marginBottom: "1rem" }}
                             id='outlined-basic'
                             label='Name'
                             variant='outlined'
                             value={form.name}
-                            onChange={(e) => setForm({...form, name: e.target.value})}
+                            onChange={(e) => setForm({ ...form, name: e.target.value })}
                         />
                         <TextField
-                            sx={{width: "100%", marginBottom: "1rem"}}
+                            sx={{ width: "100%", marginBottom: "1rem" }}
                             id='outlined-basic'
                             label='CIDR'
                             variant='outlined'
                             value={form.cidr}
-                            onChange={(e) => setForm({...form, cidr: e.target.value})}
+                            onChange={(e) => setForm({ ...form, cidr: e.target.value })}
                         />
                         <TextField
-                            sx={{width: "100%", marginBottom: "1rem"}}
+                            sx={{ width: "100%", marginBottom: "1rem" }}
                             id='outlined-basic'
                             label='Mask'
                             variant='outlined'
                             value={form.mask}
-                            onChange={(e) => setForm({...form, mask: e.target.value})}
+                            onChange={(e) => setForm({ ...form, mask: e.target.value })}
                         />
                         <TextField
-                            sx={{width: "100%", marginBottom: "1rem"}}
+                            sx={{ width: "100%", marginBottom: "1rem" }}
                             id='outlined-basic'
                             label='Gateway'
                             variant='outlined'
                             value={form.gateway}
-                            onChange={(e) => setForm({...form, gateway: e.target.value})}
+                            onChange={(e) => setForm({ ...form, gateway: e.target.value })}
                         />
-                        <Button sx={{width: "100%"}} variant='contained' onClick={addSubnet}>
+                        <Button sx={{ width: "100%" }} variant='contained' onClick={addSubnet}>
                             Add
                         </Button>
                     </Box>
