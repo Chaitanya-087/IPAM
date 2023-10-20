@@ -29,7 +29,7 @@ import com.ipam.api.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 @TestInstance(Lifecycle.PER_CLASS)
-public class IPRangeServiceUnitTest {
+class IPRangeServiceUnitTest {
 
     @InjectMocks
     private IPRangeService ipRangeService;
@@ -56,7 +56,7 @@ public class IPRangeServiceUnitTest {
     }
 
     @Test
-    public void givenIPRangeRequest_whenSaved_thenReturnIPRangeDTO() {
+    void givenIPRangeRequest_whenSaved_thenReturnIPRangeDTO() {
         given(ipRangeRepository.save(any(IPRange.class))).willReturn(ipRange);
 
         IPRangeDTO result = ipRangeService.save(ipRange);
@@ -66,7 +66,7 @@ public class IPRangeServiceUnitTest {
     }
 
     @Test
-    public void givenIPRanges_whenFindAll_thenReturnIPRangeDTOs() {
+    void givenIPRanges_whenFindAll_thenReturnIPRangeDTOs() {
         given(ipRangeRepository.findAll()).willReturn(List.of(ipRange));
 
         List<IPRangeDTO> result = ipRangeService.findAll();
@@ -76,7 +76,7 @@ public class IPRangeServiceUnitTest {
     }
 
     @Test
-    public void givenAvailableIPRanges_whenFindAllAvailable_thenReturnAvailableIPRangeDTOs() {
+    void givenAvailableIPRanges_whenFindAllAvailable_thenReturnAvailableIPRangeDTOs() {
         ipRange.setStatus(Status.AVAILABLE);
         given(ipRangeRepository.findByStatus(Status.AVAILABLE)).willReturn(List.of(ipRange));
 
@@ -87,7 +87,7 @@ public class IPRangeServiceUnitTest {
     }
 
     @Test
-    public void givenUserId_whenFindByUserId_thenReturnIPRangeDTOs() {
+    void givenUserId_whenFindByUserId_thenReturnIPRangeDTOs() {
         Long userId = 123L;
 
         given(ipRangeRepository.findByUserId(userId)).willReturn(List.of(ipRange));
@@ -99,7 +99,7 @@ public class IPRangeServiceUnitTest {
     }
 
     @Test
-    public void testAllocateValidIPRangeAndUser() {
+    void testAllocateValidIPRangeAndUser() {
         Long ipRangeId = 1L;
         Long userId = 2L;
         
@@ -120,7 +120,7 @@ public class IPRangeServiceUnitTest {
     }
 
     @Test
-    public void testAllocateInvalidIPRange() {
+    void testAllocateInvalidIPRange() {
         Long ipRangeId = 1L;
         Long userId = 2L;
         ipRange.setStatus(Status.IN_USE);
@@ -136,7 +136,7 @@ public class IPRangeServiceUnitTest {
     }
 
     @Test
-    public void testAllocateInvalidUser() {
+    void testAllocateInvalidUser() {
         Long ipRangeId = 1L;
         Long userId = 2L;
 

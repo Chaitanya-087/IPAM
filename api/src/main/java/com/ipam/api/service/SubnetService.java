@@ -38,37 +38,37 @@ public class SubnetService {
 
   public List<SubnetDTO> findByUserId(Long userId) {
     return subnetRepository
-      .findByUserId(userId)
-      .stream()
-      .map(this::convertToDto)
-      .toList();
+        .findByUserId(userId)
+        .stream()
+        .map(this::convertToDto)
+        .toList();
   }
 
   public List<SubnetDTO> findAllAvailable() {
     return subnetRepository
-      .findByStatus(Status.AVAILABLE)
-      .stream()
-      .map(this::convertToDto)
-      .toList();
+        .findByStatus(Status.AVAILABLE)
+        .stream()
+        .map(this::convertToDto)
+        .toList();
   }
 
   public String allocate(Long ipAddressId, Long userId) {
-  Optional<Subnet> subnetOpt = subnetRepository.findById(ipAddressId);
-  Optional<User> userOpt = userRepository.findById(userId);
-  if (userOpt.isEmpty()) {
-    return "Invalid user";
-  }
-  if (subnetOpt.isPresent() && subnetOpt.get().getStatus().equals(Status.AVAILABLE)) {
-    Subnet subnet = subnetOpt.get();
-    subnet.setStatus(Status.IN_USE);
-    subnet.setExpiration(LocalDateTime.now().plusDays(1));
-    subnet.setUser(userRepository.findById(userId).get());
-    subnetRepository.save(subnet);
-    return "subnet allocated with expiration date - " + subnet.getExpiration();
-  }
+    Optional<Subnet> subnetOpt = subnetRepository.findById(ipAddressId);
+    Optional<User> userOpt = userRepository.findById(userId);
+    if (userOpt.isEmpty()) {
+      return "Invalid user";
+    }
+    if (subnetOpt.isPresent() && subnetOpt.get().getStatus().equals(Status.AVAILABLE)) {
+      Subnet subnet = subnetOpt.get();
+      subnet.setStatus(Status.IN_USE);
+      subnet.setExpiration(LocalDateTime.now().plusDays(1));
+      subnet.setUser(userRepository.findById(userId).get());
+      subnetRepository.save(subnet);
+      return "subnet allocated with expiration date - " + subnet.getExpiration();
+    }
 
-  return "Invalid operation";
-}
+    return "Invalid operation";
+  }
 
   private SubnetDTO convertToDto(Subnet subnet) {
     SubnetDTO subnetDTO = new SubnetDTO();
@@ -88,7 +88,6 @@ public class SubnetService {
   private long calculateSubnetSize(String cidrNotation) {
     String[] parts = cidrNotation.split("/");
     int prefixLength = Integer.parseInt(parts[1]);
-    long size = (long) Math.pow(2, 32 - prefixLength);
-    return size;
+    return (long) Math.pow(2,(double) 32 - prefixLength);
   }
 }

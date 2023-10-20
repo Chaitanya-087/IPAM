@@ -24,7 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @TestInstance(Lifecycle.PER_CLASS)
-public class ReservationServiceUnitTest {
+class ReservationServiceUnitTest {
 
   @InjectMocks
   private ReservationService reservationService;
@@ -56,7 +56,7 @@ public class ReservationServiceUnitTest {
   }
 
   @Test
-  public void testReserve_ValidReservation() {
+  void testReserve_ValidReservation() {
     String expectedResult = "network object reserved";
 
     given(networkObjectsRepository.findById(any(Long.class)))
@@ -69,7 +69,7 @@ public class ReservationServiceUnitTest {
   }
 
   @Test
-  public void testReserve_InvalidOperation() {
+  void testReserve_InvalidOperation() {
     // Change the status of the network object to RESERVED (Invalid scenario)
     networkObject.setStatus(Status.RESERVED);
 
@@ -85,7 +85,7 @@ public class ReservationServiceUnitTest {
   }
 
   @Test
-  public void testFindAll() {
+  void testFindAll() {
     // Create some sample reservations for testing
     Reservation reservation1 = new Reservation();
     Reservation reservation2 = new Reservation();

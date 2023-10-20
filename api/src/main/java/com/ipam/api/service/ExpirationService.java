@@ -34,7 +34,6 @@ public class ExpirationService {
                 reservationRepository.delete(reservation);
             }
         }
-        System.out.println("Fixed Rate Task :: Execution Time - " + LocalDateTime.now());
     }
 
     @Scheduled(fixedRate = 10000)

@@ -35,7 +35,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class AuthControllerTests {
+class AuthControllerTests {
 
   @Autowired
   private MockMvc mockMvc;
@@ -98,7 +98,7 @@ public class AuthControllerTests {
   }
 
   @Test
-  public void testUserAuthentication() throws Exception {
+  void testUserAuthentication() throws Exception {
     LoginBody loginBody = new LoginBody();
     loginBody.setUsername("test");
     loginBody.setPassword("test123");

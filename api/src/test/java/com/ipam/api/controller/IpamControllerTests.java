@@ -29,7 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class IpamControllerTests {
+class IpamControllerTests {
 
   @Autowired
   private MockMvc mockMvc;
@@ -59,7 +59,7 @@ public class IpamControllerTests {
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
-  public void shouldSaveIPAddress() throws Exception {
+  void shouldSaveIPAddress() throws Exception {
     when(ipAddressService.save(any(IPAddress.class))).thenReturn(ipAddress);
     mockMvc
       .perform(
@@ -73,7 +73,7 @@ public class IpamControllerTests {
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
-  public void shouldReturnAllIPAddresses() throws Exception {
+  void shouldReturnAllIPAddresses() throws Exception {
     when(ipAddressService.findAll()).thenReturn(List.of(ipAddress));
     mockMvc
       .perform(get("/api/ipam/ipaddresses"))
@@ -84,7 +84,7 @@ public class IpamControllerTests {
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
-  public void shouldReturnAllUsers() throws Exception {
+  void shouldReturnAllUsers() throws Exception {
     UserDTO user1 = new UserDTO();
     user1.setId(1l);
     user1.setName("test");
@@ -115,7 +115,7 @@ public class IpamControllerTests {
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_USER" })
-  public void shouldReturnAllIPAddressesByUser() throws Exception {
+  void shouldReturnAllIPAddressesByUser() throws Exception {
     IPAddress ipAddress = new IPAddress();
     ipAddress.setAddress("192.168.81.0");
     when(ipAddressService.findByUserId(1l))

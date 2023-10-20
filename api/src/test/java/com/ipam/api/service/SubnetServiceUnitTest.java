@@ -25,7 +25,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(MockitoExtension.class)
-public class SubnetServiceUnitTest {
+class SubnetServiceUnitTest {
 
     @InjectMocks
     private SubnetService subnetService;
@@ -54,7 +54,7 @@ public class SubnetServiceUnitTest {
     }
 
     @Test
-    public void givenSubnetRequest_whenSaved_thenReturnSubnetDTO() {
+    void givenSubnetRequest_whenSaved_thenReturnSubnetDTO() {
         given(subnetRepository.save(any(Subnet.class))).willReturn(subnet);
 
         SubnetDTO result = subnetService.save(subnet);
@@ -66,7 +66,7 @@ public class SubnetServiceUnitTest {
     }
 
     @Test
-    public void givenSubnets_whenFindAll_thenReturnSubnetDTOs() {
+    void givenSubnets_whenFindAll_thenReturnSubnetDTOs() {
         given(subnetRepository.findAll()).willReturn(List.of(subnet));
 
         List<SubnetDTO> result = subnetService.findAll();
@@ -76,7 +76,7 @@ public class SubnetServiceUnitTest {
     }
 
     @Test
-    public void givenUserId_whenFindByUserId_thenReturnSubnetDTOs() {
+    void givenUserId_whenFindByUserId_thenReturnSubnetDTOs() {
         Long userId = 123L;
 
         given(subnetRepository.findByUserId(userId)).willReturn(List.of(subnet));
@@ -88,7 +88,7 @@ public class SubnetServiceUnitTest {
     }
 
     @Test
-    public void givenAvailableSubnets_whenFindAllAvailable_thenReturnAvailableSubnetDTOs() {
+    void givenAvailableSubnets_whenFindAllAvailable_thenReturnAvailableSubnetDTOs() {
         subnet.setStatus(Status.AVAILABLE);
         given(subnetRepository.findByStatus(Status.AVAILABLE)).willReturn(List.of(subnet));
 
@@ -99,7 +99,7 @@ public class SubnetServiceUnitTest {
     }
 
     @Test
-    public void testAllocateValidSubnetAndUser() {
+    void testAllocateValidSubnetAndUser() {
         Long subnetId = 1L;
         Long userId = 2L;
 
@@ -117,7 +117,7 @@ public class SubnetServiceUnitTest {
     }
 
     @Test
-    public void testAllocateInvalidSubnet() {
+    void testAllocateInvalidSubnet() {
         Long subnetId = 1L;
         Long userId = 2L;
 
@@ -135,7 +135,7 @@ public class SubnetServiceUnitTest {
     }
 
     @Test
-    public void testAllocateInvalidUser() {
+    void testAllocateInvalidUser() {
         Long subnetId = 1L;
         Long userId = 2L;
 

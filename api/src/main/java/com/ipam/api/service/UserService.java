@@ -1,7 +1,6 @@
 package com.ipam.api.service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,7 +32,7 @@ public class UserService {
     private DNSRecordRepository dnsRecordRepository;
 
     public List<UserDTO> getAllUsers() {
-        return userRepository.findByRole("USER").stream().map(this::convertToDTO).collect(Collectors.toList());
+        return userRepository.findByRole("USER").stream().map(this::convertToDTO).toList();
     }
 
     private UserDTO convertToDTO(User user) {

@@ -26,7 +26,7 @@ import com.ipam.api.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 @TestInstance(Lifecycle.PER_CLASS)
-public class IPAddressServiceUnitTest {
+class IPAddressServiceUnitTest {
 
     @InjectMocks
     private IPAddressService ipAddressService;
@@ -52,7 +52,7 @@ public class IPAddressServiceUnitTest {
     }
 
     @Test
-    public void givenIpAddress_whenSaved_thenReturnIpAddress() {
+    void givenIpAddress_whenSaved_thenReturnIpAddress() {
         given(ipAddressRepository.save(any(IPAddress.class))).willReturn(ipAddress);
 
         IPAddress result = ipAddressService.save(ipAddress);
@@ -61,28 +61,28 @@ public class IPAddressServiceUnitTest {
     }
 
     @Test
-    public void givenIpAddresses_whenFindAll_thenReturnIpAddresses() {
+    void givenIpAddresses_whenFindAll_thenReturnIpAddresses() {
         given(ipAddressRepository.findAll()).willReturn(List.of(ipAddress));
 
         List<IPAddress> ipAddresses = ipAddressService.findAll();
 
-        assertEquals(ipAddresses.size(), 1);
+        assertEquals(1,ipAddresses.size());
     }
 
     @Test
-    public void givenUserId_whenFindByUserId_thenReturnIpAddresses() {
+    void givenUserId_whenFindByUserId_thenReturnIpAddresses() {
         Long userId = 123L;
 
         given(ipAddressRepository.findByUserId(userId)).willReturn(List.of(ipAddress));
 
         List<IPAddress> ipAddresses = ipAddressService.findByUserId(userId);
 
-        assertEquals(ipAddresses.size(), 1);
+        assertEquals(1, ipAddresses.size());
         assertEquals(ipAddresses.get(0).getAddress(), ipAddress.getAddress());
     }
 
     @Test
-    public void testAllocateValidIPAddressAndUser() {
+    void testAllocateValidIPAddressAndUser() {
         Long ipAddressId = 1L;
         Long userId = 2L;
 
@@ -103,7 +103,7 @@ public class IPAddressServiceUnitTest {
     }
 
     @Test
-    public void givenAvailableIPAddresses_whenFindAllAvailable_thenReturnAvailableIPAddresses() {
+    void givenAvailableIPAddresses_whenFindAllAvailable_thenReturnAvailableIPAddresses() {
         ipAddress.setStatus(Status.AVAILABLE);
         given(ipAddressRepository.findByStatus(Status.AVAILABLE)).willReturn(List.of(ipAddress));
 
@@ -114,7 +114,7 @@ public class IPAddressServiceUnitTest {
     }
 
     @Test
-    public void testAllocateInvalidIPAddress() {
+    void testAllocateInvalidIPAddress() {
         Long ipAddressId = 1L;
         Long userId = 2L;
 
@@ -132,7 +132,7 @@ public class IPAddressServiceUnitTest {
     }
 
     @Test
-    public void testAllocateInvalidUser() {
+    void testAllocateInvalidUser() {
         Long ipAddressId = 1L;
         Long userId = 2L;
 
