@@ -44,96 +44,104 @@ public class IpamController {
   @Autowired
   private UserService userService;
 
-  //get all users (ADMIN)
   @GetMapping("/users")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
   public List<UserDTO> getUsers() {
     return userService.getAllUsers();
   }
 
-  //add ipaddress to pool (ADMIN)
   @PostMapping("/ipaddresses")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
   public ResponseEntity<IPAddress> addIpAddress(@RequestBody IPAddress body) {
     return ResponseEntity.status(HttpStatus.CREATED).body(ipAddressService.save(body));
   }
 
-  //get all ipaddresses (ADMIN)
   @GetMapping("/ipaddresses")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
   public List<IPAddress> getIpAddresses() {
     return ipAddressService.findAll();
   }
 
-  //get all ipaddresses by user (USER)
   @GetMapping("/users/{userId}/ipaddresses")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
   public List<IPAddress> getIpAddressesByUser(@PathVariable("userId") Long userId) {
     return ipAddressService.findByUserId(userId);
   }
 
-  //get all available ipaddresses (USER) or (ADMIN)
   @GetMapping("/ipaddresses/available")
+  @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
   public List<IPAddress> getAllAvailableIpAddresses() {
     return ipAddressService.findAllAvailable();
   }
 
   @PostMapping("/reserve/network-object/{id}")
-  public ResponseEntity<MessageResponse> reserveIPAddress(@PathVariable("id") Long id, @RequestBody Reservation body) {
+  @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
+  public ResponseEntity<MessageResponse> reserve(@PathVariable("id") Long id, @RequestBody Reservation body) {
     return ResponseEntity.ok().body(new MessageResponse(reservationService.reserve(id, body)));
   }
 
   @PostMapping("/ipranges")
+  @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
   public IPRangeDTO addIPRange(@RequestBody IPRange body) {
     return ipRangeService.save(body);
   }
   
   @GetMapping("/ipranges")
+  @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
   public List<IPRangeDTO> getAllIpRangeDTOs() {
     return ipRangeService.findAll();  
   }
 
   @GetMapping("/ipranges/available")
+  @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
   public List<IPRangeDTO> getAllAvailableIpRangeDTOs() {
     return ipRangeService.findAllAvailable();
   }
 
   @GetMapping("/users/{userId}/ipranges")
+  @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
   public List<IPRangeDTO> getAllIpRangeDTOsByUserId(@PathVariable("userId") Long userId) {
     return ipRangeService.findByUserId(userId);
   }
 
   @PostMapping("/subnets")
+  @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
   public SubnetDTO addSubnet(@RequestBody Subnet body) {
     return subnetService.save(body);
   }
 
   @GetMapping("/subnets")
+  @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
   public List<SubnetDTO> getAllSubnetDTOs() {
     return subnetService.findAll();
   }
 
   @GetMapping("/subnets/available")
+  @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
   public List<SubnetDTO> getAllAvailableSubnetDTOs() {
     return subnetService.findAllAvailable();
   }
 
   @GetMapping("/users/{userId}/subnets")
+  @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
   public List<SubnetDTO> getAllSubnetDTOsByUserId(@PathVariable("userId") Long userId) {
     return subnetService.findByUserId(userId);
   }
 
   @PostMapping("/allocate/ipaddresses/{ipAddressId}/users/{userId}")
+  @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
   public ResponseEntity<MessageResponse> allocateIpAddress(@PathVariable("ipAddressId") Long ipAddressId, @PathVariable("userId") Long userId) {
     return ResponseEntity.ok().body(new MessageResponse(ipAddressService.allocate(ipAddressId, userId)));
   }
 
   @PostMapping("/allocate/ipranges/{ipRangeId}/users/{userId}")
+  @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
   public ResponseEntity<MessageResponse> allocateIpRange(@PathVariable("ipRangeId") Long ipRangeId, @PathVariable("userId") Long userId) {
     return ResponseEntity.ok().body(new MessageResponse(ipRangeService.allocate(ipRangeId, userId)));
   }
 
   @PostMapping("/allocate/subnets/{subnetId}/users/{userId}")
+  @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
   public ResponseEntity<MessageResponse> allocateSubnet(@PathVariable("subnetId") Long subnetId, @PathVariable("userId") Long userId) {
     return ResponseEntity.ok().body(new MessageResponse(subnetService.allocate(subnetId, userId)));
   }

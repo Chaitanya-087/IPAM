@@ -6,8 +6,11 @@ import com.ipam.api.entity.Status;
 import com.ipam.api.entity.User;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class SubnetDTO {
     private Long id;
     private User user;

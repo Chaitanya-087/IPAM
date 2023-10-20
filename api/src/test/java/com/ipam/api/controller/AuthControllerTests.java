@@ -10,11 +10,9 @@ import com.ipam.api.dto.LoginBody;
 import com.ipam.api.dto.SignupBody;
 import com.ipam.api.entity.User;
 import com.ipam.api.security.DomainUserService;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -66,64 +64,75 @@ public class AuthControllerTests {
 
   @Test
   void registeringUser() throws JsonProcessingException, Exception {
-    SignupBody signupBody = SignupBody
-        .builder()
-        .username("test")
-        .password("{bcrypt}" + passwordEncoder.encode("test123"))
-        .email("test123@gmail.com")
-        .build();
+    SignupBody signupBody = new SignupBody();
+    signupBody.setEmail("test123@gmail.com");
+    signupBody.setUsername("test");
+    signupBody.setPassword("test123");
 
     mockMvc
-        .perform(
-            post("/api/auth/signup")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(signupBody)))
-        .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.message").value("User registered successfully!"));
-
+      .perform(
+        post("/api/auth/signup")
+          .contentType(MediaType.APPLICATION_JSON)
+          .content(objectMapper.writeValueAsString(signupBody))
+      )
+      .andExpect(status().isCreated())
+      .andExpect(jsonPath("$.message").value("User registered successfully!"));
   }
 
   @Test
   void registeringUserWithExistingUsername() throws Exception {
-
     when(userService.existsByName("test")).thenReturn(true);
 
-    SignupBody signupBody = SignupBody
-      .builder()
-      .username("test")
-      .password("{bcrypt}"+passwordEncoder.encode("test123"))
-      .email("test123@gmail.com")
-      .build();
+    SignupBody signupBody = new SignupBody();
+    signupBody.setEmail("test123@gmail.com");
+    signupBody.setUsername("test");
+    signupBody.setPassword("test234");
 
-    mockMvc.perform(post("/api/auth/signup")
-      .contentType(MediaType.APPLICATION_JSON)
-      .content(objectMapper.writeValueAsString(signupBody)))
+    mockMvc
+      .perform(
+        post("/api/auth/signup")
+          .contentType(MediaType.APPLICATION_JSON)
+          .content(objectMapper.writeValueAsString(signupBody))
+      )
       .andExpect(status().isBadRequest());
   }
 
   @Test
   public void testUserAuthentication() throws Exception {
-    LoginBody loginBody = new LoginBody("testUser", "testPassword");
+    LoginBody loginBody = new LoginBody();
+    loginBody.setUsername("test");
+    loginBody.setPassword("test123");
 
-    when(userService.findByName("testUser")).thenReturn(Optional.of(user));
+    when(userService.findByName("test")).thenReturn(Optional.of(user));
 
-    List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
-    Authentication auth = new UsernamePasswordAuthenticationToken("testUser", "testPassword", authorities);
+    List<GrantedAuthority> authorities = Collections.singletonList(
+      new SimpleGrantedAuthority("ROLE_USER")
+    );
+    Authentication auth = new UsernamePasswordAuthenticationToken(
+      "test",
+      "test123",
+      authorities
+    );
 
-    when(authenticationManager.authenticate(new UsernamePasswordAuthenticationToken("testUser", "testPassword")))
-        .thenReturn(auth);
+    when(
+      authenticationManager.authenticate(
+        new UsernamePasswordAuthenticationToken("test", "test123")
+      )
+    )
+      .thenReturn(auth);
     SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
     securityContext.setAuthentication(auth);
     SecurityContextHolder.setContext(securityContext);
 
-    mockMvc.perform(
+    mockMvc
+      .perform(
         MockMvcRequestBuilders
-            .post("/api/auth/token")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(loginBody)))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.token").isNotEmpty());
+          .post("/api/auth/token")
+          .contentType(MediaType.APPLICATION_JSON)
+          .content(objectMapper.writeValueAsString(loginBody))
+      )
+      .andExpect(status().isOk())
+      .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+      .andExpect(jsonPath("$.token").isNotEmpty());
   }
-
 }

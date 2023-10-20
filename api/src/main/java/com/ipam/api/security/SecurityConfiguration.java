@@ -68,9 +68,9 @@ public class SecurityConfiguration {
                             return corsConfiguration;
                         }))
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/api/auth/**",  "/api/ipam/**", "/v3/api-docs/**", "/swagger-ui.html",
-                                "/swagger-ui/**", "/actuator/**")
-                        .permitAll().anyRequest().authenticated())
+                        .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui.html",
+                                "/swagger-ui/**", "/actuator/**").permitAll()
+                                .anyRequest().authenticated())
                 .oauth2ResourceServer(
                         oauth2ResourceServer -> oauth2ResourceServer.jwt(jwt -> jwt.decoder(jwtDecoder())))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

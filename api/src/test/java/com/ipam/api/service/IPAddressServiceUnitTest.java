@@ -103,6 +103,17 @@ public class IPAddressServiceUnitTest {
     }
 
     @Test
+    public void givenAvailableIPAddresses_whenFindAllAvailable_thenReturnAvailableIPAddresses() {
+        ipAddress.setStatus(Status.AVAILABLE);
+        given(ipAddressRepository.findByStatus(Status.AVAILABLE)).willReturn(List.of(ipAddress));
+
+        List<IPAddress> result = ipAddressService.findAllAvailable();
+
+        assertEquals(1, result.size());
+        assertEquals(ipAddress.getAddress(), result.get(0).getAddress());
+    }
+
+    @Test
     public void testAllocateInvalidIPAddress() {
         Long ipAddressId = 1L;
         Long userId = 2L;

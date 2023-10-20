@@ -11,11 +11,9 @@ import com.ipam.api.entity.IPAddress;
 import com.ipam.api.entity.Status;
 import com.ipam.api.service.IPAddressService;
 import com.ipam.api.service.UserService;
-
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
-
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -62,38 +60,57 @@ public class IpamControllerTests {
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
   public void shouldSaveIPAddress() throws Exception {
-    when(ipAddressService.save(any(IPAddress.class)))
-        .thenReturn(ipAddress);
-    mockMvc.perform(post("/api/ipam/ipaddresses").contentType(MediaType.APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(ipAddress))).andExpect(status().isCreated())
-        .andExpect(jsonPath("$.address").exists());
+    when(ipAddressService.save(any(IPAddress.class))).thenReturn(ipAddress);
+    mockMvc
+      .perform(
+        post("/api/ipam/ipaddresses")
+          .contentType(MediaType.APPLICATION_JSON)
+          .content(objectMapper.writeValueAsString(ipAddress))
+      )
+      .andExpect(status().isCreated())
+      .andExpect(jsonPath("$.address").exists());
   }
 
   @Test
-  @WithMockUser(authorities = {"SCOPE_ROLE_ADMIN"})
+  @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
   public void shouldReturnAllIPAddresses() throws Exception {
     when(ipAddressService.findAll()).thenReturn(List.of(ipAddress));
-    mockMvc.perform(get("/api/ipam/ipaddresses")).andExpect(status().isOk())
-        .andExpect(jsonPath("$").isArray())
-        .andExpect(jsonPath("$").isNotEmpty());
+    mockMvc
+      .perform(get("/api/ipam/ipaddresses"))
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$").isArray())
+      .andExpect(jsonPath("$").isNotEmpty());
   }
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
   public void shouldReturnAllUsers() throws Exception {
-    UserDTO user1 = UserDTO.builder().id(1l)
-        .name("test").email("test123gmail.com")
-        .ipAddressesCount(1l).ipRangesCount(1l)
-        .dnsRecordsCount(1l).subnetsCount(1l).build();
-    UserDTO user2 = UserDTO.builder().id(2l)
-        .name("test2").email("test1234gmail.com")
-        .ipAddressesCount(2l).ipRangesCount(2l)
-        .dnsRecordsCount(2l).subnetsCount(2l).build();
+    UserDTO user1 = new UserDTO();
+    user1.setId(1l);
+    user1.setName("test");
+    user1.setEmail("test123gmail.com");
+    user1.setIpAddressesCount(1l);
+    user1.setIpRangesCount(1l);
+    user1.setDnsRecordsCount(1l);
+    user1.setSubnetsCount(1l);
 
+
+    UserDTO user2 = new UserDTO();
+    user2.setId(2l);
+    user2.setName("test2");
+    user2.setEmail("test123gmail.com");
+    user2.setIpAddressesCount(1l);
+    user2.setIpRangesCount(1l);
+    user2.setDnsRecordsCount(1l);
+    user2.setSubnetsCount(1l);
+
+    
     when(userService.getAllUsers()).thenReturn(Arrays.asList(user1, user2));
 
-    mockMvc.perform(get("/api/ipam/users")).andExpect(status().isOk()).andExpect(jsonPath("$", Matchers.hasSize(2)));
-
+    mockMvc
+      .perform(get("/api/ipam/users"))
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$", Matchers.hasSize(2)));
   }
 
   @Test
@@ -102,10 +119,11 @@ public class IpamControllerTests {
     IPAddress ipAddress = new IPAddress();
     ipAddress.setAddress("192.168.81.0");
     when(ipAddressService.findByUserId(1l))
-        .thenReturn(Arrays.asList(ipAddress));
-    mockMvc.perform(get("/api/ipam/users/1/ipaddresses")).andExpect(status().isOk())
-        .andExpect(jsonPath("$").isArray())
-        .andExpect(jsonPath("$").isNotEmpty());
+      .thenReturn(Arrays.asList(ipAddress));
+    mockMvc
+      .perform(get("/api/ipam/users/1/ipaddresses"))
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$").isArray())
+      .andExpect(jsonPath("$").isNotEmpty());
   }
-
 }
