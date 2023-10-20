@@ -5,7 +5,8 @@ import React from "react";
 import {AccountCircle} from "@mui/icons-material";
 import MoreIcon from "@mui/icons-material/MoreVert";
 import MenuIcon from "@mui/icons-material/Menu";
-import {useAuth} from "../context/AuthContext";
+import useAuth from "../hooks/useAuth";
+import MuiDrawer from "./Drawer";
 
 const Navbar = () => {
     const [anchorEl, setAnchorEl] = React.useState(null);
@@ -13,7 +14,7 @@ const Navbar = () => {
     const {getRole} = useAuth();
     const isMenuOpen = Boolean(anchorEl);
     const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
-
+    const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
     const handleProfileMenuOpen = (event) => {
         setAnchorEl(event.currentTarget);
     };
@@ -99,10 +100,10 @@ const Navbar = () => {
     );
 
     return (
-        <Box sx={{flexGrow: 1}}>
+        <Box sx={{flexGrow: 1,backgroundColor:"white"}}>
             <AppBar position='static'>
                 <Toolbar>
-                    <IconButton size='large' edge='start' color='inherit' aria-label='open drawer' sx={{mr: 2}}>
+                    <IconButton size='large' edge='start' color='inherit' onClick={() => setIsDrawerOpen(true)} aria-label='open drawer' sx={{mr: 2}}>
                         <MenuIcon />
                     </IconButton>
                     <Typography variant='h6' noWrap component='div' sx={{display: {sm: "block"}}}>
@@ -148,6 +149,7 @@ const Navbar = () => {
             </AppBar>
             {renderMobileMenu}
             {renderMenu}
+            <MuiDrawer isDrawerOpen={isDrawerOpen} setIsDrawerOpen={setIsDrawerOpen} />
         </Box>
     );
 };

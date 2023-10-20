@@ -1,7 +1,14 @@
+import { Outlet } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import RequireAuth from "../require-auth";
 
 const Root = () => {
-    return <Navbar/>
+    return (
+        <RequireAuth>
+            <Navbar />
+            <Outlet />
+        </RequireAuth>
+    );
 };
 
 export default Root;

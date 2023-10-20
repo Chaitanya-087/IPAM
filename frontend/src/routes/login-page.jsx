@@ -6,7 +6,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import {BarLoader} from "react-spinners";
 import "../styles/auth.css";
-import {useAuth} from "../context/AuthContext";
+import useAuth from "../hooks/useAuth";
 import instance from "../api/axios";
 
 const LoginPage = () => {

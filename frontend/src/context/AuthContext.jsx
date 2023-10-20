@@ -1,5 +1,4 @@
-/* eslint-disable react/prop-types */
-import {createContext, useState, useEffect, useContext} from "react";
+import {createContext, useState} from "react";
 
 export const AuthContext = createContext();
 
@@ -26,21 +25,7 @@ export const AuthProvider = ({children}) => {
 
     const logout = () => {
         persistAuthState({});
-    }
-
-    useEffect(() => {
-        // Add any async logic for loading authentication state if needed
-        const tokenExpiryCheckInterval = setInterval(() => {
-            if (authState?.token && isTokenExpired(authState?.token)) {
-                persistAuthState({});
-                console.log("checking")
-            }
-        }, 1000);
-
-        return () => {
-            clearInterval(tokenExpiryCheckInterval);
-        };
-    }, []);
+    };
 
     const contextValues = {
         authState,
@@ -59,12 +44,3 @@ const getPersistedAuthState = () => {
     const storedAuthState = localStorage.getItem("auth-state");
     return storedAuthState ? JSON.parse(storedAuthState) : {};
 };
-
-
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        return;
-    }
-    return context;    
-}
