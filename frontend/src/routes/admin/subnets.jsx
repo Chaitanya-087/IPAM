@@ -1,6 +1,5 @@
-import {useState, useEffect, useRef, useCallback} from "react";
-import useAuth from "../hooks/useAuth";
-import {Backdrop, Box, Button, Checkbox, Fade, IconButton, Modal, Paper, TextField, Typography} from "@mui/material";
+import React, {useState, useEffect, useRef, useCallback} from "react";
+import {Backdrop, Box, Button, Fade, IconButton, Modal, Paper, TextField, Typography} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -10,8 +9,9 @@ import TableHead from "@mui/material/TableHead";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import {ToastContainer, toast} from "react-toastify";
-import useAxiosPrivate from "../hooks/useAxiosPrivate";
+import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import {Chip} from "@mui/joy";
+import Stats from "./Stats";
 
 const columns = [
     {
@@ -135,6 +135,8 @@ const style = {
     boxShadow: 24,
     borderRadius: "8px",
     p: 4,
+    maxWidth:"400px",
+    minWidth: "300px"
 };
 
 const toastConfig = {
@@ -147,10 +149,10 @@ const toastConfig = {
     theme: "light",
 };
 
-export default function SubnetsTable() {
+export default function Subnets() {
     const [rows, setRows] = useState([]);
-    const {authState, getRole} = useAuth();
     const [open, setOpen] = useState(false);
+    const [stats, setStats] = useState({reservedCount: 0, inuseCount: 0, availableCount: 0});
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [form, setForm] = useState({
@@ -174,16 +176,11 @@ export default function SubnetsTable() {
         setPage(0);
     };
 
-    const request = async (id) => {
-        await axiosPrivate.post(`/api/ipam/allocate/subnets/${id}/users/${authState?.id}`);
-        toast(`🦄 subnet allocated`, toastConfig);
-        fetchData();
-    };
-
     const reserve = async (id) => {
         await axiosPrivate.post(`/api/ipam/reserve/network-object/${id}`, {purpose: "purpose"});
         toast(`🦄 subnet reserved`, toastConfig);
         fetchData();
+        fetchStats();
     };
 
     const post = async (e) => {
@@ -196,32 +193,45 @@ export default function SubnetsTable() {
         toast(`🦄 new subnet added to pool`, toastConfig);
         if (res.status === 201) {
             fetchData();
+            fetchStats();
             handleClose();
         }
     };
 
     const fetchData = useCallback(async () => {
         try {
-            const URL = getRole() === "ROLE_ADMIN" ? "/api/ipam/subnets" : "/api/ipam/subnets/available";
+            const URL = "/api/ipam/subnets";
             const response = await axiosPrivate.get(URL);
             setRows(response.data);
         } catch (error) {
             console.error("Error fetching data:", error);
         }
-    }, [axiosPrivate, getRole]);
+    }, [axiosPrivate]);
+
+    const fetchStats = useCallback(async () => {
+        try {
+            const URL = "/api/ipam/admin/subnet-scan";
+            const response = await axiosPrivate.get(URL);
+            setStats(response.data);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    }, [axiosPrivate]);
 
     useEffect(() => {
         if (hasMounted.current) {
             fetchData();
+            fetchStats();
         }
 
         return () => {
             hasMounted.current = true;
         };
-    }, [fetchData]);
+    }, [fetchData, fetchStats]);
 
     return (
-        <>
+        <React.Fragment>
+            <Stats stats={stats} />
             <Paper
                 sx={{
                     width: "100%",
@@ -235,13 +245,9 @@ export default function SubnetsTable() {
                     boxShadow: "none",
                 }}>
                 <h1>Subnets</h1>
-                {getRole() === "ROLE_ADMIN" ? (
-                    <IconButton onClick={handleOpen}>
-                        <AddIcon />
-                    </IconButton>
-                ) : (
-                    ""
-                )}
+                <IconButton onClick={handleOpen}>
+                    <AddIcon />
+                </IconButton>
             </Paper>
             <Paper
                 sx={{
@@ -256,9 +262,6 @@ export default function SubnetsTable() {
                     <Table stickyHeader aria-label='sticky table'>
                         <TableHead>
                             <TableRow>
-                                <TableCell padding='checkbox'>
-                                    <Checkbox color='primary' checked={false} />
-                                </TableCell>
                                 {columns.map((column) => (
                                     <TableCell key={column.id} align={column.align} style={{minWidth: column.minWidth}}>
                                         <Typography paragraph fontWeight='700' fontSize='16px' m='0'>
@@ -272,28 +275,19 @@ export default function SubnetsTable() {
                             {rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
                                 return (
                                     <TableRow hover role='checkbox' tabIndex={-1} key={row.id}>
-                                        <TableCell padding='checkbox'>
-                                            <Checkbox color='primary' checked={false} />
-                                        </TableCell>
                                         {columns.map((column) => {
                                             const value = row[column.id];
                                             if (column.id === "actions") {
                                                 return (
                                                     <TableCell key={column.id} align={column.align}>
-                                                        {getRole() === "ROLE_ADMIN" ? (
-                                                            <Button
-                                                                variant='contained'
-                                                                onClick={() => reserve(row.id)}
-                                                                disabled={
-                                                                    row.status === "RESERVED" || row.status === "IN_USE"
-                                                                }>
-                                                                Reserve
-                                                            </Button>
-                                                        ) : (
-                                                            <Button variant='contained' onClick={() => request(row.id)}>
-                                                                Request
-                                                            </Button>
-                                                        )}
+                                                        <Button
+                                                            variant='contained'
+                                                            onClick={() => reserve(row.id)}
+                                                            disabled={
+                                                                row.status === "RESERVED" || row.status === "IN_USE"
+                                                            }>
+                                                            Reserve
+                                                        </Button>
                                                     </TableCell>
                                                 );
                                             }
@@ -375,6 +369,6 @@ export default function SubnetsTable() {
                 </Fade>
             </Modal>
             <ToastContainer />
-        </>
+        </React.Fragment>
     );
 }

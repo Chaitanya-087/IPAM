@@ -1,0 +1,64 @@
+.stats-group {
+    display: grid;
+    grid-template-columns: repeat( auto-fit, minmax(250px, 1fr) );
+    gap: 2rem;
+}
+
+.stats-group>* {
+    flex: 1;
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 0.25rem;
+}
+
+.stat-info {
+    position: relative;
+    display: flex;
+    padding-block: 2rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat>.title {
+    padding: 0.75rem;
+    border-bottom: 1px solid #e0e0e0;
+    font-weight: bold;
+}
+
+.stat>.title.reserved {
+    color: #0A470A;
+}
+
+.stat>.title.available {
+    color: #0A0A47;
+}
+
+.stat>.title.inuse {
+    color: #470A0A;
+}
+
+.icon-container {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.25rem;
+}
+
+.icon-container.reserved {
+    background-color: #E3FBE3;
+    color: #0A470A;
+}
+
+.icon-container.available {
+    background-color: #E3E3FB;
+    color: #0A0A47;
+}
+
+.icon-container.inuse {
+    background-color: #FBE3E3;
+    color: #470A0A;
+}

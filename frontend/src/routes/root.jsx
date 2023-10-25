@@ -1,14 +1,8 @@
-import { Outlet } from "react-router-dom";
-import Navbar from "../components/Navbar";
-import RequireAuth from "../require-auth";
+// import RequireAuth from "./require-auth";
+import SharedLayout from "../components/SharedLayout";
 
 const Root = () => {
-    return (
-        <RequireAuth>
-            <Navbar />
-            <Outlet />
-        </RequireAuth>
-    );
+    return <SharedLayout />;
 };
 
 export default Root;

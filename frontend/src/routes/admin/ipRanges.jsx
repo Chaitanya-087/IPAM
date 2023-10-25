@@ -1,22 +1,32 @@
-import {useState, useEffect, useRef, useCallback} from "react";
-import useAuth from "../hooks/useAuth";
-import {Backdrop, Box, Button, Checkbox, Fade, IconButton, Modal, Paper, TextField, Typography} from "@mui/material";
+import React, {useState, useEffect, useRef, useCallback} from "react";
+import {
+    Backdrop,
+    Box,
+    Button,
+    Fade,
+    IconButton,
+    Modal,
+    Paper,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TablePagination,
+    TableRow,
+    TextField,
+    Typography,
+} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TablePagination from "@mui/material/TablePagination";
-import TableRow from "@mui/material/TableRow";
 import {ToastContainer, toast} from "react-toastify";
-import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import {Chip} from "@mui/joy";
+import useAxiosPrivate from "../../hooks/useAxiosPrivate";
+import Stats from "./Stats";
 
 const columns = [
     {
-        id: "name",
-        label: "Name",
+        id: "startAddress",
+        label: "Start Address",
         minWidth: 170,
         component: function (value) {
             return (
@@ -27,45 +37,9 @@ const columns = [
         },
     },
     {
-        id: "cidr",
-        label: "CIDR",
+        id: "endAddress",
+        label: "End Address",
         minWidth: 170,
-        component: function (value) {
-            return (
-                <Typography paragraph m='0' fontWeight='700' fontSize='14px'>
-                    {value}
-                </Typography>
-            );
-        },
-    },
-    {
-        id: "mask",
-        label: "Mask",
-        minWidth: 100,
-        component: function (value) {
-            return (
-                <Typography paragraph m='0' fontWeight='700' fontSize='14px'>
-                    {value}
-                </Typography>
-            );
-        },
-    },
-    {
-        id: "gateway",
-        label: "Gateway",
-        minWidth: 170,
-        component: function (value) {
-            return (
-                <Typography paragraph m='0' fontWeight='700' fontSize='14px'>
-                    {value}
-                </Typography>
-            );
-        },
-    },
-    {
-        id: "size",
-        label: "Size",
-        minWidth: 100,
         component: function (value) {
             return (
                 <Typography paragraph m='0' fontWeight='700' fontSize='14px'>
@@ -89,12 +63,24 @@ const columns = [
     },
     {
         id: "expiration",
-        label: "Expiration",
+        label: "Expiration Date",
         minWidth: 200,
         component: function (value) {
             return (
                 <Typography paragraph m='0' fontWeight='700' fontSize='12px'>
                     {value ? new Date(value).toLocaleString() : "-----"}
+                </Typography>
+            );
+        },
+    },
+    {
+        id: "size",
+        label: "Size",
+        minWidth: 100,
+        component: function (value) {
+            return (
+                <Typography paragraph m='0' fontWeight='700' fontSize='14px'>
+                    {value}
                 </Typography>
             );
         },
@@ -135,6 +121,7 @@ const style = {
     boxShadow: 24,
     borderRadius: "8px",
     p: 4,
+    width: "360px",
 };
 
 const toastConfig = {
@@ -147,25 +134,20 @@ const toastConfig = {
     theme: "light",
 };
 
-export default function SubnetsTable() {
+const IPRanges = () => {
     const [rows, setRows] = useState([]);
-    const {authState, getRole} = useAuth();
     const [open, setOpen] = useState(false);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [form, setForm] = useState({
-        name: "",
-        cidr: "",
-        mask: "",
-        gateway: "",
-    });
+    const [stats, setStats] = useState({reservedCount: 0, inuseCount: 0, availableCount: 0});
+    const [form, setForm] = useState({startAddress: "", endAddress: ""});
     const hasMounted = useRef(false);
     const {axiosPrivate} = useAxiosPrivate();
 
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
-    const handleChangePage = (event, newPage) => {
+    const handleChangePage = (newPage) => {
         setPage(newPage);
     };
 
@@ -174,26 +156,21 @@ export default function SubnetsTable() {
         setPage(0);
     };
 
-    const request = async (id) => {
-        await axiosPrivate.post(`/api/ipam/allocate/subnets/${id}/users/${authState?.id}`);
-        toast(`🦄 subnet allocated`, toastConfig);
-        fetchData();
-    };
-
     const reserve = async (id) => {
         await axiosPrivate.post(`/api/ipam/reserve/network-object/${id}`, {purpose: "purpose"});
-        toast(`🦄 subnet reserved`, toastConfig);
+        toast(`🦄 ip address reserved`, toastConfig);
         fetchData();
+        fetchStats();
     };
 
-    const post = async (e) => {
-        e.preventDefault();
-        if (form.name === "" || form.cidr === "" || form.mask === "" || form.gateway === "") {
+    const post = async (event) => {
+        event.preventDefault();
+        if (form.startAddress === "" || form.endAddress === "") {
             return;
         }
-        const URL = "/api/ipam/subnets";
+        const URL = "/api/ipam/ipranges";
         const res = await axiosPrivate.post(URL, {...form});
-        toast(`🦄 new subnet added to pool`, toastConfig);
+        toast(`🦄 new ip address added to pool`, toastConfig);
         if (res.status === 201) {
             fetchData();
             handleClose();
@@ -202,26 +179,38 @@ export default function SubnetsTable() {
 
     const fetchData = useCallback(async () => {
         try {
-            const URL = getRole() === "ROLE_ADMIN" ? "/api/ipam/subnets" : "/api/ipam/subnets/available";
+            const URL = "/api/ipam/ipranges";
             const response = await axiosPrivate.get(URL);
             setRows(response.data);
         } catch (error) {
             console.error("Error fetching data:", error);
         }
-    }, [axiosPrivate, getRole]);
+    }, [axiosPrivate]);
+
+    const fetchStats = useCallback(async () => {
+        try {
+            const URL = "/api/ipam/admin/iprange-scan";
+            const response = await axiosPrivate.get(URL);
+            setStats(response.data);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    }, [axiosPrivate]);
 
     useEffect(() => {
         if (hasMounted.current) {
             fetchData();
+            fetchStats();
         }
 
         return () => {
             hasMounted.current = true;
         };
-    }, [fetchData]);
+    }, [fetchData, fetchStats]);
 
     return (
-        <>
+        <React.Fragment>
+            <Stats stats={stats} />
             <Paper
                 sx={{
                     width: "100%",
@@ -234,14 +223,10 @@ export default function SubnetsTable() {
                     backgroundColor: "transparent",
                     boxShadow: "none",
                 }}>
-                <h1>Subnets</h1>
-                {getRole() === "ROLE_ADMIN" ? (
-                    <IconButton onClick={handleOpen}>
-                        <AddIcon />
-                    </IconButton>
-                ) : (
-                    ""
-                )}
+                <h1>IP Ranges</h1>
+                <IconButton onClick={handleOpen}>
+                    <AddIcon />
+                </IconButton>
             </Paper>
             <Paper
                 sx={{
@@ -256,9 +241,6 @@ export default function SubnetsTable() {
                     <Table stickyHeader aria-label='sticky table'>
                         <TableHead>
                             <TableRow>
-                                <TableCell padding='checkbox'>
-                                    <Checkbox color='primary' checked={false} />
-                                </TableCell>
                                 {columns.map((column) => (
                                     <TableCell key={column.id} align={column.align} style={{minWidth: column.minWidth}}>
                                         <Typography paragraph fontWeight='700' fontSize='16px' m='0'>
@@ -272,28 +254,19 @@ export default function SubnetsTable() {
                             {rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
                                 return (
                                     <TableRow hover role='checkbox' tabIndex={-1} key={row.id}>
-                                        <TableCell padding='checkbox'>
-                                            <Checkbox color='primary' checked={false} />
-                                        </TableCell>
                                         {columns.map((column) => {
                                             const value = row[column.id];
                                             if (column.id === "actions") {
                                                 return (
                                                     <TableCell key={column.id} align={column.align}>
-                                                        {getRole() === "ROLE_ADMIN" ? (
-                                                            <Button
-                                                                variant='contained'
-                                                                onClick={() => reserve(row.id)}
-                                                                disabled={
-                                                                    row.status === "RESERVED" || row.status === "IN_USE"
-                                                                }>
-                                                                Reserve
-                                                            </Button>
-                                                        ) : (
-                                                            <Button variant='contained' onClick={() => request(row.id)}>
-                                                                Request
-                                                            </Button>
-                                                        )}
+                                                        <Button
+                                                            variant='contained'
+                                                            onClick={() => reserve(row.id)}
+                                                            disabled={
+                                                                row.status === "RESERVED" || row.status === "IN_USE"
+                                                            }>
+                                                            Reserve
+                                                        </Button>
                                                     </TableCell>
                                                 );
                                             }
@@ -334,39 +307,23 @@ export default function SubnetsTable() {
                 <Fade in={open}>
                     <Box sx={style}>
                         <Typography id='transition-modal-title' variant='h6' component='h2'>
-                            Add Subnet
+                            Add IP Range
                         </Typography>
                         <TextField
                             sx={{width: "100%", marginBottom: "1rem"}}
                             id='outlined-basic'
-                            label='Name'
+                            label='Start Address'
                             variant='outlined'
-                            value={form.name}
-                            onChange={(e) => setForm({...form, name: e.target.value})}
+                            value={form.startAddress}
+                            onChange={(e) => setForm((prev) => ({...prev, startAddress: e.target.value}))}
                         />
                         <TextField
                             sx={{width: "100%", marginBottom: "1rem"}}
                             id='outlined-basic'
-                            label='CIDR'
+                            label='End Address'
                             variant='outlined'
-                            value={form.cidr}
-                            onChange={(e) => setForm({...form, cidr: e.target.value})}
-                        />
-                        <TextField
-                            sx={{width: "100%", marginBottom: "1rem"}}
-                            id='outlined-basic'
-                            label='Mask'
-                            variant='outlined'
-                            value={form.mask}
-                            onChange={(e) => setForm({...form, mask: e.target.value})}
-                        />
-                        <TextField
-                            sx={{width: "100%", marginBottom: "1rem"}}
-                            id='outlined-basic'
-                            label='Gateway'
-                            variant='outlined'
-                            value={form.gateway}
-                            onChange={(e) => setForm({...form, gateway: e.target.value})}
+                            value={form.endAddress}
+                            onChange={(e) => setForm((prev) => ({...prev, endAddress: e.target.value}))}
                         />
                         <Button sx={{width: "100%"}} variant='contained' onClick={post}>
                             Add
@@ -375,6 +332,8 @@ export default function SubnetsTable() {
                 </Fade>
             </Modal>
             <ToastContainer />
-        </>
+        </React.Fragment>
     );
-}
+};
+
+export default IPRanges;

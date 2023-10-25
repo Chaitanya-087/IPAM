@@ -8,6 +8,7 @@ import {BarLoader} from "react-spinners";
 import "../styles/auth.css";
 import useAuth from "../hooks/useAuth";
 import instance from "../api/axios";
+import { useLocation } from "react-router-dom";
 
 const LoginPage = () => {
     const navigate = useNavigate();
@@ -15,6 +16,7 @@ const LoginPage = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const {state} = useLocation();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -22,13 +24,18 @@ const LoginPage = () => {
             return;
         }
         setIsLoading(true);
-        const res = await instance.post("/api/auth/token", {username, password});
-        setIsLoading(false);
+        await login(username, password);
+
         setPassword("");
         setUsername("");
-        if (!isLoading && res.status === 200) {
+    };
+
+    const login = async (username, password) => {
+        const res = await instance.post("/api/auth/token", {username, password});
+        if (res.status === 200) {
             persistAuthState(res.data);
-            navigate("/");
+            setIsLoading(false);
+            navigate(state?.from ? state.from : "/");
         }
     };
 

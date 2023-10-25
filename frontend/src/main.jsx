@@ -7,36 +7,31 @@ import Root from "./routes/root.jsx";
 import ErrorPage from "./routes/error-page.jsx";
 import LoginPage from "./routes/login-page.jsx";
 import SignUpPage from "./routes/sign-up-page";
-import RequireAuth from "./require-auth";
-import IPRangesTable from "./routes/ip-ranges";
-import SubnetsTable from "./routes/subnet";
-import IPAddressesTable from "./routes/ip-addresses";
 import "react-toastify/dist/ReactToastify.css";
+import RoleGuard from "./routes/role-gaurd";
 
 const router = createBrowserRouter([
     {
         path: "/",
-        element: (
-            <RequireAuth>
-                <Root />
-            </RequireAuth>
-        ),
+        element: <Root />,
         errorElement: <ErrorPage />,
+
         children: [
             {
                 path: "/",
-                element: <IPAddressesTable />,
+                element: <RoleGuard componentName="Home"/>
             },
             {
                 path: "/ip-ranges",
-                element: <IPRangesTable />,
+                element: <RoleGuard componentName="IPRanges" />,
             },
             {
                 path: "/subnets",
-                element: <SubnetsTable />,
+                element: <RoleGuard componentName="Subnets" />,
             },
         ],
     },
+
     {
         path: "/login",
         element: <LoginPage />,

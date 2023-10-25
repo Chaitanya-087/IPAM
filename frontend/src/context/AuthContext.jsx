@@ -7,7 +7,7 @@ export const AuthProvider = ({children}) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const isAuthenticated = () => {
-        return !!authState?.token && !isTokenExpired(authState.token);
+        return !!getPersistedAuthState().token && !isTokenExpired(authState.token);
     };
 
     const isTokenExpired = (token) => {
