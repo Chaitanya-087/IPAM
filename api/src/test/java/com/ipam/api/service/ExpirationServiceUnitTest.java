@@ -22,7 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class ExpirationServiceUnitTest {
+class ExpirationServiceUnitTest {
 
   @InjectMocks
   private ExpirationService expirationService;

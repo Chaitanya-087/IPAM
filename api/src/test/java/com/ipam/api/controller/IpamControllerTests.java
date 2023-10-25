@@ -188,8 +188,7 @@ class IpamControllerTests {
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
-  public void testAdminIpScan() throws Exception {
-    // Mock the behavior of the ipAddressService.getStats method
+  void testAdminIpScan() throws Exception {
     StatDTO stat = new StatDTO();
     stat.setAvailableCount(1l);
     stat.setInuseCount(1l);
@@ -207,12 +206,11 @@ class IpamControllerTests {
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
-  public void testAddIPRange() throws Exception {
-    IPRange request = new IPRange(); // Create a sample IPRange object
+  void testAddIPRange() throws Exception {
+    IPRange request = new IPRange(); 
 
-    // Mock the behavior of the ipRangeService.save method
     when(ipRangeService.save(request))
-      .thenReturn(new IPRangeDTO(/* specify values */));
+      .thenReturn(new IPRangeDTO());
 
     mockMvc
       .perform(
@@ -225,7 +223,7 @@ class IpamControllerTests {
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
-  public void testGetAllIPRanges() throws Exception {
+  void testGetAllIPRanges() throws Exception {
     when(ipRangeService.findAll())
       .thenReturn(List.of(new IPRangeDTO(), new IPRangeDTO()));
 
@@ -238,7 +236,7 @@ class IpamControllerTests {
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_USER" })
-  public void testGetAllAvailableIPRanges() throws Exception {
+  void testGetAllAvailableIPRanges() throws Exception {
     when(ipRangeService.findAllAvailable())
       .thenReturn(List.of(new IPRangeDTO(), new IPRangeDTO()));
 
@@ -251,7 +249,7 @@ class IpamControllerTests {
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_USER" })
-  public void testGetAllIPRangesByUser() throws Exception {
+  void testGetAllIPRangesByUser() throws Exception {
     when(ipRangeService.findByUserId(1l))
       .thenReturn(List.of(new IPRangeDTO(), new IPRangeDTO()));
 
@@ -280,7 +278,6 @@ class IpamControllerTests {
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
   void testAdminIpRangeScan() throws Exception {
-    // Mock the behavior of the ipRangeService.getStats method
     StatDTO stat = new StatDTO();
     stat.setAvailableCount(1l);
     stat.setInuseCount(1l);
@@ -298,7 +295,7 @@ class IpamControllerTests {
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
-  public void testAddSubnet() throws Exception {
+  void testAddSubnet() throws Exception {
     Subnet request = new Subnet(); 
 
     when(subnetService.save(request)).thenReturn(new SubnetDTO());
@@ -314,7 +311,7 @@ class IpamControllerTests {
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
-  public void testGetAllSubnets() throws Exception {
+  void testGetAllSubnets() throws Exception {
     when(subnetService.findAll())
       .thenReturn(List.of(new SubnetDTO(), new SubnetDTO()));
 
@@ -327,7 +324,7 @@ class IpamControllerTests {
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_USER" })
-  public void testGetAllAvailableSubnets() throws Exception {
+  void testGetAllAvailableSubnets() throws Exception {
     when(subnetService.findAllAvailable())
       .thenReturn(List.of(new SubnetDTO(), new SubnetDTO()));
 
@@ -340,7 +337,7 @@ class IpamControllerTests {
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_USER" })
-  public void testGetAllSubnetsByUser() throws Exception {
+  void testGetAllSubnetsByUser() throws Exception {
     when(subnetService.findByUserId(1l))
       .thenReturn(List.of(new SubnetDTO(), new SubnetDTO()));
 
@@ -368,8 +365,7 @@ class IpamControllerTests {
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
-  public void testAdminSubnetScan() throws Exception {
-    // Mock the behavior of the subnetService.getStats method
+  void testAdminSubnetScan() throws Exception {
     StatDTO stat = new StatDTO();
     stat.setAvailableCount(1l);
     stat.setInuseCount(1l);
@@ -387,7 +383,7 @@ class IpamControllerTests {
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
-  public void testReserve() throws Exception {
+  void testReserve() throws Exception {
     long objectId = 1L;
         Reservation reservation = new Reservation(); 
         String expectedMessage = "Reservation Successful"; 
@@ -403,7 +399,7 @@ class IpamControllerTests {
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
-  public void testGetAllReservations() throws Exception {
+  void testGetAllReservations() throws Exception {
     when(reservationService.findAll())
       .thenReturn(List.of(new ReservationDTO(), new ReservationDTO()));
 

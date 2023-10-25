@@ -49,15 +49,15 @@ public class ReservationService {
         reservationDTO.setId(reservation.getId());
         reservationDTO.setPurpose(reservation.getPurpose());
         reservationDTO.setReleaseDate(reservation.getReleaseDate());
-        if (reservation.getNetworkObject() instanceof IPAddress) {
+        if (reservation.getNetworkObject() instanceof IPAddress ipAddress) {
             reservationDTO.setType("IP Address");
-            reservationDTO.setIdentifier(((IPAddress) reservation.getNetworkObject()).getAddress());
-        } else if(reservation.getNetworkObject() instanceof IPRange) {
+            reservationDTO.setIdentifier(ipAddress.getAddress());
+        } else if(reservation.getNetworkObject() instanceof IPRange ipRange) {
             reservationDTO.setType("IP Range");
-            reservationDTO.setIdentifier(((IPRange) reservation.getNetworkObject()).getStartAddress() + " - " + ((IPRange) reservation.getNetworkObject()).getEndAddress());
-        } else if(reservation.getNetworkObject() instanceof Subnet){
+            reservationDTO.setIdentifier(ipRange.getStartAddress() + " - " + ipRange.getEndAddress());
+        } else if(reservation.getNetworkObject() instanceof Subnet subnet){
             reservationDTO.setType("Subnet");
-            reservationDTO.setIdentifier(((Subnet) reservation.getNetworkObject()).getCidr());
+            reservationDTO.setIdentifier(subnet.getCidr());
         }
         return reservationDTO;
     }

@@ -181,7 +181,7 @@ class IPAddressServiceUnitTest {
     String result = ipAddressService.assignDomainName(1L);
 
     assertEquals("Domain name assigned", result);
-    assertEquals(ipAddress.getDns().indexOf(".pro"), 6);
+    assertEquals(6,ipAddress.getDns().indexOf(".pro"));
   }
 
   @Test

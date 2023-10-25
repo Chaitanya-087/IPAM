@@ -45,8 +45,8 @@ public class ExpirationService {
         networkObject.setStatus(Status.AVAILABLE);
         networkObject.setExpiration(null);
         networkObject.setUser(null);
-        if (networkObject instanceof IPAddress) {
-          ((IPAddress) networkObject).setDns(null);
+        if (networkObject instanceof IPAddress ipAddress) {
+          ipAddress.setDns(null);
         }
         networkObjectsRepository.save(networkObject);
       }

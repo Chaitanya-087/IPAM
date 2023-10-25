@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
@@ -91,7 +90,7 @@ public class IPAddressService {
         String salt = String.valueOf(new Random().nextInt(10,100));
       try (InputStream inputStream = resourceLoader.getResource("classpath:words.txt").getInputStream();
              Scanner scanner = new Scanner(inputStream, StandardCharsets.UTF_8.name())) {
-            List<String> lines = scanner.tokens().collect(Collectors.toList());
+            List<String> lines = scanner.tokens().toList();
             int randomIndex = new Random().nextInt(lines.size());
             return lines.get(randomIndex).concat(salt);
         } catch (IOException e) {
