@@ -10,4 +10,5 @@ public interface SubnetRepository extends JpaRepository<Subnet, Long> {
   Long countByUser(User user);
   List<Subnet> findByUserId(Long id);
   List<Subnet> findByStatus(Status status);
+  long countByStatus(Status status);
 }

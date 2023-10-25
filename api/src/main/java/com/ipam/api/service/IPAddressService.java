@@ -1,16 +1,23 @@
 package com.ipam.api.service;
 
+import com.ipam.api.dto.StatDTO;
 import com.ipam.api.entity.IPAddress;
 import com.ipam.api.entity.Status;
 import com.ipam.api.entity.User;
 import com.ipam.api.repository.IPAddressRepository;
 import com.ipam.api.repository.UserRepository;
-
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
+import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,6 +28,9 @@ public class IPAddressService {
 
   @Autowired
   private UserRepository userRepository;
+
+  @Autowired
+  private ResourceLoader resourceLoader;
 
   public IPAddress save(IPAddress body) {
     IPAddress ipAddress = new IPAddress();
@@ -41,20 +51,60 @@ public class IPAddressService {
   }
 
   public String allocate(Long ipAddressId, Long userId) {
-    Optional<IPAddress> ipAddressOpt = ipAddressRepository.findById(ipAddressId);
+    Optional<IPAddress> ipAddressOpt = ipAddressRepository.findById(
+      ipAddressId
+    );
     Optional<User> userOpt = userRepository.findById(userId);
     if (userOpt.isEmpty()) {
       return "Invalid user";
     }
-    if (ipAddressOpt.isPresent() && ipAddressOpt.get().getStatus().equals(Status.AVAILABLE)) {
+    if (
+      ipAddressOpt.isPresent() &&
+      ipAddressOpt.get().getStatus().equals(Status.AVAILABLE)
+    ) {
       IPAddress ipAddress = ipAddressOpt.get();
       ipAddress.setStatus(Status.IN_USE);
       ipAddress.setExpiration(LocalDateTime.now().plusHours(1));
       ipAddress.setUser(userRepository.findById(userId).get());
       ipAddressRepository.save(ipAddress);
-      return "ipaddress allocated with expiration date - " + ipAddress.getExpiration();
+      return (
+        "ipaddress allocated with expiration date - " +
+        ipAddress.getExpiration()
+      );
     }
 
     return "Invalid operation";
+  }
+
+  public String assignDomainName(long ipAddresId) throws IOException {
+    Optional<IPAddress> ipAddressOpt = ipAddressRepository.findById(ipAddresId);
+    if (ipAddressOpt.isPresent()) {
+      IPAddress ipAddress = ipAddressOpt.get();
+      ipAddress.setDns(generateRandomString().concat(".pro"));
+      ipAddressRepository.save(ipAddress);
+      return "Domain name assigned";
+    }
+    return "Invalid operation";
+  }
+
+  private String generateRandomString() {
+        String salt = String.valueOf(new Random().nextInt(10,100));
+      try (InputStream inputStream = resourceLoader.getResource("classpath:words.txt").getInputStream();
+             Scanner scanner = new Scanner(inputStream, StandardCharsets.UTF_8.name())) {
+            List<String> lines = scanner.tokens().collect(Collectors.toList());
+            int randomIndex = new Random().nextInt(lines.size());
+            return lines.get(randomIndex).concat(salt);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+  public StatDTO getStats() {
+    StatDTO stat = new StatDTO();
+    stat.setAvailableCount(ipAddressRepository.countByStatus(Status.AVAILABLE));
+    stat.setInuseCount(ipAddressRepository.countByStatus(Status.IN_USE));
+    stat.setReservedCount(ipAddressRepository.countByStatus(Status.RESERVED));
+    return stat;
   }
 }

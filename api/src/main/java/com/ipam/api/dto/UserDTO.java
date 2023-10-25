@@ -12,6 +12,5 @@ public class UserDTO {
   private String email;
   private Long ipAddressesCount;
   private Long ipRangesCount;
-  private Long dnsRecordsCount;
   private Long subnetsCount;
 }

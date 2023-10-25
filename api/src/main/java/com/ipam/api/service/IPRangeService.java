@@ -1,6 +1,7 @@
 package com.ipam.api.service;
 
 import com.ipam.api.dto.IPRangeDTO;
+import com.ipam.api.dto.StatDTO;
 import com.ipam.api.entity.IPRange;
 import com.ipam.api.entity.Status;
 import com.ipam.api.entity.User;
@@ -100,5 +101,12 @@ public class IPRangeService {
     ipRangeDTO.setExpirationDate(ipRange.getExpiration());
     ipRangeDTO.setUser(ipRange.getUser());
     return ipRangeDTO;
+  }
+    public StatDTO getStats() {
+    StatDTO stat =  new StatDTO();
+    stat.setAvailableCount(ipRangeRepository.countByStatus(Status.AVAILABLE));
+    stat.setInuseCount(ipRangeRepository.countByStatus(Status.IN_USE));
+    stat.setReservedCount(ipRangeRepository.countByStatus(Status.RESERVED));
+    return stat;
   }
 }

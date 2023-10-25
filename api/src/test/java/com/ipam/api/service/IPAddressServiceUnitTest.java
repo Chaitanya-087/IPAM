@@ -1,14 +1,25 @@
 package com.ipam.api.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import com.ipam.api.dto.StatDTO;
+import com.ipam.api.entity.IPAddress;
+import com.ipam.api.entity.Status;
+import com.ipam.api.entity.User;
+import com.ipam.api.repository.IPAddressRepository;
+import com.ipam.api.repository.UserRepository;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-
+import java.util.Random;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -17,131 +28,184 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import com.ipam.api.entity.IPAddress;
-import com.ipam.api.entity.Status;
-import com.ipam.api.entity.User;
-import com.ipam.api.repository.IPAddressRepository;
-import com.ipam.api.repository.UserRepository;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 
 @ExtendWith(MockitoExtension.class)
 @TestInstance(Lifecycle.PER_CLASS)
 class IPAddressServiceUnitTest {
 
-    @InjectMocks
-    private IPAddressService ipAddressService;
+  @InjectMocks
+  private IPAddressService ipAddressService;
 
-    @Mock
-    private IPAddressRepository ipAddressRepository;
+  @Mock
+  private IPAddressRepository ipAddressRepository;
 
-    private IPAddress ipAddress;
+  private IPAddress ipAddress;
 
-    @Mock
-    private UserRepository userRepository;
+  @Mock
+  private Random rand;
 
-    @BeforeAll
-    public void setUp() {
-        ipAddress = new IPAddress();
-        ipAddress.setId(1l);
-        ipAddress.setUser(null);
-        ipAddress.setStatus(Status.AVAILABLE);
-        ipAddress.setCreatedAt(LocalDateTime.now());
-        ipAddress.setUpdatedAt(LocalDateTime.now());
-        ipAddress.setExpiration(null);
-        ipAddress.setAddress("192.78.9.1");
-    }
+  @Mock
+  private ResourceLoader resourceLoader;
 
-    @Test
-    void givenIpAddress_whenSaved_thenReturnIpAddress() {
-        given(ipAddressRepository.save(any(IPAddress.class))).willReturn(ipAddress);
+  @Mock
+  private UserRepository userRepository;
 
-        IPAddress result = ipAddressService.save(ipAddress);
+  @BeforeAll
+  public void setUp() {
+    ipAddress = new IPAddress();
+    ipAddress.setId(1l);
+    ipAddress.setUser(null);
+    ipAddress.setStatus(Status.AVAILABLE);
+    ipAddress.setCreatedAt(LocalDateTime.now());
+    ipAddress.setUpdatedAt(LocalDateTime.now());
+    ipAddress.setExpiration(null);
+    ipAddress.setDns(null);
+    ipAddress.setAddress("192.78.9.1");
+  }
 
-        assertEquals(ipAddress.getAddress(), result.getAddress());
-    }
+  @Test
+  void givenIpAddress_whenSaved_thenReturnIpAddress() {
+    given(ipAddressRepository.save(any(IPAddress.class))).willReturn(ipAddress);
 
-    @Test
-    void givenIpAddresses_whenFindAll_thenReturnIpAddresses() {
-        given(ipAddressRepository.findAll()).willReturn(List.of(ipAddress));
+    IPAddress result = ipAddressService.save(ipAddress);
 
-        List<IPAddress> ipAddresses = ipAddressService.findAll();
+    assertEquals(ipAddress.getAddress(), result.getAddress());
+  }
 
-        assertEquals(1,ipAddresses.size());
-    }
+  @Test
+  void givenIpAddresses_whenFindAll_thenReturnIpAddresses() {
+    given(ipAddressRepository.findAll()).willReturn(List.of(ipAddress));
 
-    @Test
-    void givenUserId_whenFindByUserId_thenReturnIpAddresses() {
-        Long userId = 123L;
+    List<IPAddress> ipAddresses = ipAddressService.findAll();
 
-        given(ipAddressRepository.findByUserId(userId)).willReturn(List.of(ipAddress));
+    assertEquals(1, ipAddresses.size());
+  }
 
-        List<IPAddress> ipAddresses = ipAddressService.findByUserId(userId);
+  @Test
+  void givenUserId_whenFindByUserId_thenReturnIpAddresses() {
+    Long userId = 123L;
 
-        assertEquals(1, ipAddresses.size());
-        assertEquals(ipAddresses.get(0).getAddress(), ipAddress.getAddress());
-    }
+    given(ipAddressRepository.findByUserId(userId))
+      .willReturn(List.of(ipAddress));
 
-    @Test
-    void testAllocateValidIPAddressAndUser() {
-        Long ipAddressId = 1L;
-        Long userId = 2L;
+    List<IPAddress> ipAddresses = ipAddressService.findByUserId(userId);
 
-        IPAddress ipAddress = new IPAddress();
-        ipAddress.setStatus(Status.AVAILABLE);
+    assertEquals(1, ipAddresses.size());
+    assertEquals(ipAddresses.get(0).getAddress(), ipAddress.getAddress());
+  }
 
-        User user = new User();
+  @Test
+  void testAllocateValidIPAddressAndUser() {
+    Long ipAddressId = 1L;
+    Long userId = 2L;
 
-        given(ipAddressRepository.findById(ipAddressId)).willReturn(Optional.of(ipAddress));
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
-        given(ipAddressRepository.save(any(IPAddress.class))).willReturn(ipAddress);
+    IPAddress ipAddress = new IPAddress();
+    ipAddress.setStatus(Status.AVAILABLE);
 
-        String result = ipAddressService.allocate(ipAddressId, userId);
+    User user = new User();
 
-        assertEquals("ipaddress allocated with expiration date - " + ipAddress.getExpiration(), result);
-        assertEquals(Status.IN_USE, ipAddress.getStatus());
-        assertEquals(user, ipAddress.getUser());
-    }
+    given(ipAddressRepository.findById(ipAddressId))
+      .willReturn(Optional.of(ipAddress));
+    given(userRepository.findById(userId)).willReturn(Optional.of(user));
+    given(ipAddressRepository.save(any(IPAddress.class))).willReturn(ipAddress);
 
-    @Test
-    void givenAvailableIPAddresses_whenFindAllAvailable_thenReturnAvailableIPAddresses() {
-        ipAddress.setStatus(Status.AVAILABLE);
-        given(ipAddressRepository.findByStatus(Status.AVAILABLE)).willReturn(List.of(ipAddress));
+    String result = ipAddressService.allocate(ipAddressId, userId);
 
-        List<IPAddress> result = ipAddressService.findAllAvailable();
+    assertEquals(
+      "ipaddress allocated with expiration date - " + ipAddress.getExpiration(),
+      result
+    );
+    assertEquals(Status.IN_USE, ipAddress.getStatus());
+    assertEquals(user, ipAddress.getUser());
+  }
 
-        assertEquals(1, result.size());
-        assertEquals(ipAddress.getAddress(), result.get(0).getAddress());
-    }
+  @Test
+  void givenAvailableIPAddresses_whenFindAllAvailable_thenReturnAvailableIPAddresses() {
+    ipAddress.setStatus(Status.AVAILABLE);
+    given(ipAddressRepository.findByStatus(Status.AVAILABLE))
+      .willReturn(List.of(ipAddress));
 
-    @Test
-    void testAllocateInvalidIPAddress() {
-        Long ipAddressId = 1L;
-        Long userId = 2L;
+    List<IPAddress> result = ipAddressService.findAllAvailable();
 
-        IPAddress ipAddress = new IPAddress();
-        ipAddress.setStatus(Status.IN_USE);
+    assertEquals(1, result.size());
+    assertEquals(ipAddress.getAddress(), result.get(0).getAddress());
+  }
 
-        User user = new User();
+  @Test
+  void testAllocateInvalidIPAddress() {
+    Long ipAddressId = 1L;
+    Long userId = 2L;
 
-        given(ipAddressRepository.findById(ipAddressId)).willReturn(Optional.of(ipAddress));
-        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+    IPAddress ipAddress = new IPAddress();
+    ipAddress.setStatus(Status.IN_USE);
 
-        String result = ipAddressService.allocate(ipAddressId, userId);
+    User user = new User();
 
-        assertEquals("Invalid operation", result);
-    }
+    given(ipAddressRepository.findById(ipAddressId))
+      .willReturn(Optional.of(ipAddress));
+    given(userRepository.findById(userId)).willReturn(Optional.of(user));
 
-    @Test
-    void testAllocateInvalidUser() {
-        Long ipAddressId = 1L;
-        Long userId = 2L;
+    String result = ipAddressService.allocate(ipAddressId, userId);
 
-        given(ipAddressRepository.findById(ipAddressId)).willReturn(Optional.of(new IPAddress()));
-        given(userRepository.findById(userId)).willReturn(Optional.empty());
+    assertEquals("Invalid operation", result);
+  }
 
-        String result = ipAddressService.allocate(ipAddressId, userId);
+  @Test
+  void testAllocateInvalidUser() {
+    Long ipAddressId = 1L;
+    Long userId = 2L;
 
-        assertEquals("Invalid user", result);
-    }
+    given(ipAddressRepository.findById(ipAddressId))
+      .willReturn(Optional.of(new IPAddress()));
+    given(userRepository.findById(userId)).willReturn(Optional.empty());
 
+    String result = ipAddressService.allocate(ipAddressId, userId);
+
+    assertEquals("Invalid user", result);
+  }
+
+  @Test
+  void givenValidIPAddressId_whenAssignDomainName_thenDomainNameAssigned()
+    throws IOException {
+    String testWord = "test";
+    InputStream inputStream = new ByteArrayInputStream(testWord.getBytes());
+    Resource resource = mock(Resource.class);
+
+    when(ipAddressRepository.findById(any(Long.class)))
+      .thenReturn(Optional.of(ipAddress));
+    when(ipAddressRepository.save(any(IPAddress.class))).thenReturn(ipAddress);
+    when(resource.getInputStream()).thenReturn(inputStream);
+    when(resourceLoader.getResource(any(String.class))).thenReturn(resource);
+    String result = ipAddressService.assignDomainName(1L);
+
+    assertEquals("Domain name assigned", result);
+    assertEquals(ipAddress.getDns().indexOf(".pro"), 6);
+  }
+
+  @Test
+  void givenInvalidIPAddressId_whenAssignDomainName_thenInvalidOperation()
+    throws IOException {
+    long ipAddressId = 1L;
+
+    when(ipAddressRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+    String result = ipAddressService.assignDomainName(ipAddressId);
+
+    assertEquals("Invalid operation", result);
+  }
+
+  @Test
+  void givenStats_whenGetStats_thenReturnStats() {
+    given(ipAddressRepository.countByStatus(Status.AVAILABLE)).willReturn(1L);
+    given(ipAddressRepository.countByStatus(Status.IN_USE)).willReturn(1L);
+    given(ipAddressRepository.countByStatus(Status.RESERVED)).willReturn(1L);
+
+    StatDTO stat = ipAddressService.getStats();
+
+    assertEquals(1L, stat.getAvailableCount());
+    assertEquals(1L, stat.getInuseCount());
+    assertEquals(1L, stat.getReservedCount());
+  }
 }

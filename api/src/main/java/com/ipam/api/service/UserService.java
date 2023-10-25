@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 
 import com.ipam.api.dto.UserDTO;
 import com.ipam.api.entity.User;
-import com.ipam.api.repository.DNSRecordRepository;
 import com.ipam.api.repository.IPAddressRepository;
 import com.ipam.api.repository.IPRangeRepository;
 import com.ipam.api.repository.SubnetRepository;
@@ -28,9 +27,6 @@ public class UserService {
     @Autowired
     private SubnetRepository subnetRepository;
 
-    @Autowired
-    private DNSRecordRepository dnsRecordRepository;
-
     public List<UserDTO> getAllUsers() {
         return userRepository.findByRole("USER").stream().map(this::convertToDTO).toList();
     }
@@ -43,7 +39,6 @@ public class UserService {
         userDTO.setIpAddressesCount(ipAddressRepository.countByUser(user));
         userDTO.setIpRangesCount(ipRangeRepository.countByUser(user));
         userDTO.setSubnetsCount(subnetRepository.countByUser(user));
-        userDTO.setDnsRecordsCount(dnsRecordRepository.countByUser(user));
         return userDTO;
     }
     

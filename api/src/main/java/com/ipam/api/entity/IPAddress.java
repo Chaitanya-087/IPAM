@@ -10,6 +10,6 @@ import lombok.Setter;
 @Table(name = "ipAddresses")
 @Entity
 public class IPAddress extends NetworkObject {
-
+  private String dns;
   private String address;
 }

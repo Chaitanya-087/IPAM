@@ -10,4 +10,5 @@ public interface IPRangeRepository extends JpaRepository<IPRange, Long> {
   Long countByUser(User user);
   List<IPRange> findByUserId(Long id);
   List<IPRange> findByStatus(Status status);
+  long countByStatus(Status status);
 }

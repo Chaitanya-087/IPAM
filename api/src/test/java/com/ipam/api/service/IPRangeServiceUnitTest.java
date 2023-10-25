@@ -2,15 +2,20 @@ package com.ipam.api.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.when;
 
+import com.ipam.api.dto.IPRangeDTO;
+import com.ipam.api.dto.StatDTO;
+import com.ipam.api.entity.IPRange;
+import com.ipam.api.entity.Status;
+import com.ipam.api.entity.User;
+import com.ipam.api.repository.IPRangeRepository;
+import com.ipam.api.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -20,131 +25,144 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.ipam.api.dto.IPRangeDTO;
-import com.ipam.api.entity.IPRange;
-import com.ipam.api.entity.Status;
-import com.ipam.api.entity.User;
-import com.ipam.api.repository.IPRangeRepository;
-import com.ipam.api.repository.UserRepository;
-
 @ExtendWith(MockitoExtension.class)
 @TestInstance(Lifecycle.PER_CLASS)
 class IPRangeServiceUnitTest {
 
-    @InjectMocks
-    private IPRangeService ipRangeService;
+  @InjectMocks
+  private IPRangeService ipRangeService;
 
-    @Mock
-    private IPRangeRepository ipRangeRepository;
+  @Mock
+  private IPRangeRepository ipRangeRepository;
 
-    @Mock
-    private UserRepository userRepository;
+  @Mock
+  private UserRepository userRepository;
 
-    private IPRange ipRange;
+  private IPRange ipRange;
 
-    @BeforeAll
-    public void setUp() {
-        ipRange = new IPRange();
-        ipRange.setId(1L);
-        ipRange.setUser(null);
-        ipRange.setCreatedAt(LocalDateTime.now());
-        ipRange.setUpdatedAt(LocalDateTime.now());
-        ipRange.setExpiration(null);
-        ipRange.setStatus(Status.AVAILABLE);
-        ipRange.setStartAddress("192.168.0.1");
-        ipRange.setEndAddress("192.168.0.10");
-    }
+  @BeforeAll
+  public void setUp() {
+    ipRange = new IPRange();
+    ipRange.setId(1L);
+    ipRange.setUser(null);
+    ipRange.setCreatedAt(LocalDateTime.now());
+    ipRange.setUpdatedAt(LocalDateTime.now());
+    ipRange.setExpiration(null);
+    ipRange.setStatus(Status.AVAILABLE);
+    ipRange.setStartAddress("192.168.0.1");
+    ipRange.setEndAddress("192.168.0.10");
+  }
 
-    @Test
-    void givenIPRangeRequest_whenSaved_thenReturnIPRangeDTO() {
-        given(ipRangeRepository.save(any(IPRange.class))).willReturn(ipRange);
+  @Test
+  void givenIPRangeRequest_whenSaved_thenReturnIPRangeDTO() {
+    given(ipRangeRepository.save(any(IPRange.class))).willReturn(ipRange);
 
-        IPRangeDTO result = ipRangeService.save(ipRange);
+    IPRangeDTO result = ipRangeService.save(ipRange);
 
-        assertEquals(ipRange.getStartAddress(), result.getStartAddress());
-        assertEquals(ipRange.getEndAddress(), result.getEndAddress());
-    }
+    assertEquals(ipRange.getStartAddress(), result.getStartAddress());
+    assertEquals(ipRange.getEndAddress(), result.getEndAddress());
+  }
 
-    @Test
-    void givenIPRanges_whenFindAll_thenReturnIPRangeDTOs() {
-        given(ipRangeRepository.findAll()).willReturn(List.of(ipRange));
+  @Test
+  void givenIPRanges_whenFindAll_thenReturnIPRangeDTOs() {
+    given(ipRangeRepository.findAll()).willReturn(List.of(ipRange));
 
-        List<IPRangeDTO> result = ipRangeService.findAll();
+    List<IPRangeDTO> result = ipRangeService.findAll();
 
-        assertEquals(1, result.size());
-        assertEquals(ipRange.getStartAddress(), result.get(0).getStartAddress());
-    }
+    assertEquals(1, result.size());
+    assertEquals(ipRange.getStartAddress(), result.get(0).getStartAddress());
+  }
 
-    @Test
-    void givenAvailableIPRanges_whenFindAllAvailable_thenReturnAvailableIPRangeDTOs() {
-        ipRange.setStatus(Status.AVAILABLE);
-        given(ipRangeRepository.findByStatus(Status.AVAILABLE)).willReturn(List.of(ipRange));
+  @Test
+  void givenAvailableIPRanges_whenFindAllAvailable_thenReturnAvailableIPRangeDTOs() {
+    ipRange.setStatus(Status.AVAILABLE);
+    given(ipRangeRepository.findByStatus(Status.AVAILABLE))
+      .willReturn(List.of(ipRange));
 
-        List<IPRangeDTO> result = ipRangeService.findAllAvailable();
+    List<IPRangeDTO> result = ipRangeService.findAllAvailable();
 
-        assertEquals(1, result.size());
-        assertEquals(ipRange.getStartAddress(), result.get(0).getStartAddress());
-    }
+    assertEquals(1, result.size());
+    assertEquals(ipRange.getStartAddress(), result.get(0).getStartAddress());
+  }
 
-    @Test
-    void givenUserId_whenFindByUserId_thenReturnIPRangeDTOs() {
-        Long userId = 123L;
+  @Test
+  void givenUserId_whenFindByUserId_thenReturnIPRangeDTOs() {
+    Long userId = 123L;
 
-        given(ipRangeRepository.findByUserId(userId)).willReturn(List.of(ipRange));
+    given(ipRangeRepository.findByUserId(userId)).willReturn(List.of(ipRange));
 
-        List<IPRangeDTO> result = ipRangeService.findByUserId(userId);
+    List<IPRangeDTO> result = ipRangeService.findByUserId(userId);
 
-        assertEquals(1, result.size());
-        assertEquals(ipRange.getStartAddress(), result.get(0).getStartAddress());
-    }
+    assertEquals(1, result.size());
+    assertEquals(ipRange.getStartAddress(), result.get(0).getStartAddress());
+  }
 
-    @Test
-    void testAllocateValidIPRangeAndUser() {
-        Long ipRangeId = 1L;
-        Long userId = 2L;
-        
-        IPRange ipRange = new IPRange();
-        ipRange.setStatus(Status.AVAILABLE);
+  @Test
+  void testAllocateValidIPRangeAndUser() {
+    Long ipRangeId = 1L;
+    Long userId = 2L;
 
-        User user = new User();
+    IPRange ipRange = new IPRange();
+    ipRange.setStatus(Status.AVAILABLE);
 
-        when(ipRangeRepository.findById(ipRangeId)).thenReturn(Optional.of(ipRange));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(ipRangeRepository.save(any(IPRange.class))).thenReturn(ipRange);
+    User user = new User();
 
-        String result = ipRangeService.allocate(ipRangeId, userId);
+    when(ipRangeRepository.findById(ipRangeId))
+      .thenReturn(Optional.of(ipRange));
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    when(ipRangeRepository.save(any(IPRange.class))).thenReturn(ipRange);
 
-        assertEquals("iprange allocated with expiration date - " + ipRange.getExpiration(), result);
-        assertEquals(Status.IN_USE, ipRange.getStatus());
-        assertEquals(user, ipRange.getUser());
-    }
+    String result = ipRangeService.allocate(ipRangeId, userId);
 
-    @Test
-    void testAllocateInvalidIPRange() {
-        Long ipRangeId = 1L;
-        Long userId = 2L;
-        ipRange.setStatus(Status.IN_USE);
+    assertEquals(
+      "iprange allocated with expiration date - " + ipRange.getExpiration(),
+      result
+    );
+    assertEquals(Status.IN_USE, ipRange.getStatus());
+    assertEquals(user, ipRange.getUser());
+  }
 
-        User user = new User();
+  @Test
+  void testAllocateInvalidIPRange() {
+    Long ipRangeId = 1L;
+    Long userId = 2L;
+    ipRange.setStatus(Status.IN_USE);
 
-        when(ipRangeRepository.findById(ipRangeId)).thenReturn(Optional.of(ipRange));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+    User user = new User();
 
-        String result = ipRangeService.allocate(ipRangeId, userId);
+    when(ipRangeRepository.findById(ipRangeId))
+      .thenReturn(Optional.of(ipRange));
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-        assertEquals("Invalid operation", result);
-    }
+    String result = ipRangeService.allocate(ipRangeId, userId);
 
-    @Test
-    void testAllocateInvalidUser() {
-        Long ipRangeId = 1L;
-        Long userId = 2L;
+    assertEquals("Invalid operation", result);
+  }
 
-        when(ipRangeRepository.findById(ipRangeId)).thenReturn(Optional.of(ipRange));
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+  @Test
+  void testAllocateInvalidUser() {
+    Long ipRangeId = 1L;
+    Long userId = 2L;
 
-        String result = ipRangeService.allocate(ipRangeId, userId);
+    when(ipRangeRepository.findById(ipRangeId))
+      .thenReturn(Optional.of(ipRange));
+    when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-        assertEquals("Invalid user", result);
-    }
+    String result = ipRangeService.allocate(ipRangeId, userId);
+
+    assertEquals("Invalid user", result);
+  }
+
+  @Test
+  void givenStats_whenGetStats_thenReturnStats() {
+    given(ipRangeRepository.countByStatus(Status.AVAILABLE)).willReturn(1L);
+    given(ipRangeRepository.countByStatus(Status.IN_USE)).willReturn(1L);
+    given(ipRangeRepository.countByStatus(Status.RESERVED)).willReturn(1L);
+
+    StatDTO stat = ipRangeService.getStats();
+
+    assertEquals(1L, stat.getAvailableCount());
+    assertEquals(1L, stat.getInuseCount());
+    assertEquals(1L, stat.getReservedCount());
+  }
 }
