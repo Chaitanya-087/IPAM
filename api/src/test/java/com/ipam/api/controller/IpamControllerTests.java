@@ -22,6 +22,7 @@ import com.ipam.api.service.ReservationService;
 import com.ipam.api.service.SubnetService;
 import com.ipam.api.service.UserService;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.hamcrest.Matchers;
@@ -207,10 +208,9 @@ class IpamControllerTests {
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
   void testAddIPRange() throws Exception {
-    IPRange request = new IPRange(); 
+    IPRange request = new IPRange();
 
-    when(ipRangeService.save(request))
-      .thenReturn(new IPRangeDTO());
+    when(ipRangeService.save(request)).thenReturn(new IPRangeDTO());
 
     mockMvc
       .perform(
@@ -296,7 +296,7 @@ class IpamControllerTests {
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
   void testAddSubnet() throws Exception {
-    Subnet request = new Subnet(); 
+    Subnet request = new Subnet();
 
     when(subnetService.save(request)).thenReturn(new SubnetDTO());
 
@@ -385,16 +385,20 @@ class IpamControllerTests {
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
   void testReserve() throws Exception {
     long objectId = 1L;
-        Reservation reservation = new Reservation(); 
-        String expectedMessage = "Reservation Successful"; 
+    Reservation reservation = new Reservation();
+    String expectedMessage = "Reservation Successful";
 
-        when(reservationService.reserve(objectId, reservation)).thenReturn(expectedMessage);
+    when(reservationService.reserve(objectId, reservation))
+      .thenReturn(expectedMessage);
 
-        mockMvc.perform(post("/api/ipam/reserve/network-object/{id}", objectId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(reservation)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    mockMvc
+      .perform(
+        post("/api/ipam/reserve/network-object/{id}", objectId)
+          .contentType(MediaType.APPLICATION_JSON)
+          .content(objectMapper.writeValueAsString(reservation))
+      )
+      .andExpect(status().isOk())
+      .andExpect(content().contentType(MediaType.APPLICATION_JSON));
   }
 
   @Test
@@ -405,6 +409,38 @@ class IpamControllerTests {
 
     mockMvc
       .perform(get("/api/ipam/reservations"))
+      .andExpect(status().isOk())
+      .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+      .andExpect(jsonPath("$").isArray());
+  }
+
+  @Test
+  @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
+  public void testGetIpAddressesByIpRangeId() throws Exception {
+    Long ipRangeId = 1L;
+    List<IPAddress> expectedIpAddresses = new ArrayList<>(); // Define your expected IP addresses
+
+    when(ipRangeService.findAllIpAddress(ipRangeId))
+      .thenReturn(expectedIpAddresses);
+
+    mockMvc
+      .perform(get("/api/ipam/ipranges/{ipRangeId}/ipaddresses", ipRangeId))
+      .andExpect(status().isOk())
+      .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+      .andExpect(jsonPath("$").isArray());
+  }
+
+  @Test
+  @WithMockUser(authorities = { "SCOPE_ROLE_USER" })
+  public void testGetAvailableIpAddressesByIpRangeId() throws Exception {
+    Long ipRangeId = 1L;
+    List<IPAddress> expectedAvailableIpAddresses = new ArrayList<>(); // Define your expected available IP addresses
+
+    when(ipRangeService.findAllAvailableAddressesInRange(ipRangeId))
+      .thenReturn(expectedAvailableIpAddresses);
+
+    mockMvc
+      .perform(get("/api/ipam/ipranges/{ipRangeId}/ipaddresses/available", ipRangeId))
       .andExpect(status().isOk())
       .andExpect(content().contentType(MediaType.APPLICATION_JSON))
       .andExpect(jsonPath("$").isArray());

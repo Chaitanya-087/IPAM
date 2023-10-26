@@ -3,7 +3,11 @@ import useAuth from "../../hooks/useAuth";
 import {
     Box,
     Button,
+    FormControl,
+    InputLabel,
+    MenuItem,
     Paper,
+    Select,
     Tab,
     Table,
     TableBody,
@@ -89,9 +93,16 @@ const IPAdressesTable = ({type}) => {
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const hasMounted = useRef(false);
     const {axiosPrivate} = useAxiosPrivate();
+    const [rangeId, setRangeId] = useState("");
+    const [ranges, setRanges] = useState([]);
+
+    const handleChange = (event) => {
+        setRangeId(event.target.value);
+    };
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
+        setRangeId("");
     };
 
     const handleChangeRowsPerPage = (event) => {
@@ -110,28 +121,40 @@ const IPAdressesTable = ({type}) => {
         toast(`🦄 dns generated`, toastConfig);
         fetchData();
     };
+    const fetchRanges = useCallback(async () => {
+        try {
+            const response = await axiosPrivate.get(`/api/ipam/ipranges/available`);
+            setRanges(response.data);
+        } catch (error) {
+            console.log("Error fetching data:", error);
+        }
+    }, [axiosPrivate]);
 
     const fetchData = useCallback(async () => {
         try {
-            const URL =
+            let URL =
                 type === "available"
                     ? "/api/ipam/ipaddresses/available"
                     : `/api/ipam/users/${authState?.id}/ipaddresses`;
+
+            URL = rangeId ? `/api/ipam/ipranges/${rangeId}/ipaddresses/available` : URL;
+
             const response = await axiosPrivate.get(URL);
             setRows(response.data);
         } catch (error) {
             console.error("Error fetching data:", error);
         }
-    }, [authState?.id, axiosPrivate, type]);
+    }, [authState?.id, axiosPrivate, type, rangeId]);
 
     useEffect(() => {
         if (hasMounted.current) {
             fetchData();
+            fetchRanges();
         }
         return () => {
             hasMounted.current = true;
         };
-    }, [fetchData]);
+    }, [fetchData, fetchRanges]);
 
     return (
         <React.Fragment>
@@ -148,6 +171,28 @@ const IPAdressesTable = ({type}) => {
                     boxShadow: "none",
                 }}>
                 <h1>IP Addresses - {type}</h1>
+                {type === "available" && (
+                    <FormControl sx={{m: 1, minWidth: 200}}>
+                        <InputLabel id='demo-simple-select-helper-label'>Ip Range</InputLabel>
+                        <Select
+                            labelId='demo-simple-select-helper-label'
+                            id='demo-simple-select-helper'
+                            value={rangeId}
+                            label='Ip Range'
+                            onChange={handleChange}>
+                            <MenuItem key='all12324' value=''>
+                                <em>None</em>
+                            </MenuItem>
+                            {ranges.map((range) => (
+                                <MenuItem key={range.id} value={range.id}>
+                                    <Typography paragraph m='0' fontWeight='700' fontSize='14px'>
+                                        {range.startAddress} - {range.endAddress}
+                                    </Typography>
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                )}
             </Paper>
             <Paper
                 sx={{

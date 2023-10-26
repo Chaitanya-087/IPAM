@@ -2,16 +2,18 @@ package com.ipam.api.service;
 
 import com.ipam.api.dto.IPRangeDTO;
 import com.ipam.api.dto.StatDTO;
+import com.ipam.api.entity.IPAddress;
 import com.ipam.api.entity.IPRange;
 import com.ipam.api.entity.Status;
 import com.ipam.api.entity.User;
 import com.ipam.api.repository.IPRangeRepository;
 import com.ipam.api.repository.UserRepository;
-
+import com.ipam.api.util.NetworkUtil;
+import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,10 +26,23 @@ public class IPRangeService {
   @Autowired
   private UserRepository userRepository;
 
+  @Autowired
+  private NetworkUtil networkUtil;
+
+  @Transactional
   public IPRangeDTO save(IPRange body) {
     IPRange ipRange = new IPRange();
     ipRange.setStartAddress(body.getStartAddress());
     ipRange.setEndAddress(body.getEndAddress());
+    long start = networkUtil.ipToLong(body.getStartAddress());
+    long end = networkUtil.ipToLong(body.getEndAddress());
+
+    for (long current = start; current <= end; current++) {
+      String ip = networkUtil.longToIp(current);
+      IPAddress ipAddress = new IPAddress();
+      ipAddress.setAddress(ip);
+      ipRange.getIpAddresses().add(ipAddress);
+    }
     return convertToDTO(ipRangeRepository.save(ipRange));
   }
 
@@ -55,36 +70,45 @@ public class IPRangeService {
       .toList();
   }
 
-    public String allocate(Long ipAddressId, Long userId) {
-    Optional<IPRange> ipAddressOpt = ipRangeRepository.findById(ipAddressId);
+  @Transactional
+  public String allocate(Long ipRangeId, Long userId) {
+    Optional<IPRange> ipRangeOpt = ipRangeRepository.findById(ipRangeId);
     Optional<User> userOpt = userRepository.findById(userId);
     if (userOpt.isEmpty()) {
       return "Invalid user";
     }
-    if (ipAddressOpt.isPresent() && ipAddressOpt.get().getStatus().equals(Status.AVAILABLE)) {
-      IPRange ipRange = ipAddressOpt.get();
+    if (ipRangeOpt.isPresent()) {
+      IPRange ipRange = ipRangeOpt.get();
+      for (IPAddress ipAddress : ipRange.getIpAddresses()) {
+        if (ipAddress.getStatus().equals(Status.AVAILABLE)) {
+          ipAddress.setStatus(Status.IN_USE);
+          ipAddress.setUser(userOpt.get());
+          ipAddress.setExpiration(LocalDateTime.now().plusDays(1));
+        }
+      }
+      ipRange.setExpiration(LocalDateTime.now().plusDays(1));
       ipRange.setStatus(Status.IN_USE);
-      ipRange.setExpiration(LocalDateTime.now().plusHours(1));
-      ipRange.setUser(userRepository.findById(userId).get());
+      ipRange.setUser(userOpt.get());
       ipRangeRepository.save(ipRange);
-      return "iprange allocated with expiration date - " + ipRange.getExpiration();
+      return "Ip range allocated";
     }
+
     return "Invalid operation";
   }
 
-  private long calculateIPv4RangeSize(String startAddress, String endAddress) {
-    String[] startParts = startAddress.split("\\.");
-    String[] endParts = endAddress.split("\\.");
-
-    long start = 0;
-    long end = 0;
-
-    for (int i = 0; i < 4; i++) {
-      start = start << 8 | Integer.parseInt(startParts[i]);
-      end = end << 8 | Integer.parseInt(endParts[i]);
+  public List<IPAddress> findAllIpAddress(Long ipRangeId) {
+    Optional<IPRange> ipRangeOpt = ipRangeRepository.findById(ipRangeId);
+    if (ipRangeOpt.isPresent()) {
+      return ipRangeOpt.get().getIpAddresses();
     }
+    return new ArrayList<>();
+  }
 
-    return (end - start) + 1;
+  public List<IPAddress> findAllAvailableAddressesInRange(Long ipRangeId) {
+    return this.findAllIpAddress(ipRangeId)
+      .stream()
+      .filter(ipAddress -> ipAddress.getStatus().equals(Status.AVAILABLE))
+      .toList();
   }
 
   private IPRangeDTO convertToDTO(IPRange ipRange) {
@@ -93,17 +117,16 @@ public class IPRangeService {
     ipRangeDTO.setStartAddress(ipRange.getStartAddress());
     ipRangeDTO.setEndAddress(ipRange.getEndAddress());
     ipRangeDTO.setStatus(ipRange.getStatus());
-    ipRangeDTO.setSize(
-      calculateIPv4RangeSize(ipRange.getStartAddress(), ipRange.getEndAddress())
-    );
+    ipRangeDTO.setSize((long) ipRange.getIpAddresses().size());
     ipRangeDTO.setCreatedAt(ipRange.getCreatedAt());
     ipRangeDTO.setUpdatedAt(ipRange.getUpdatedAt());
     ipRangeDTO.setExpirationDate(ipRange.getExpiration());
     ipRangeDTO.setUser(ipRange.getUser());
     return ipRangeDTO;
   }
-    public StatDTO getStats() {
-    StatDTO stat =  new StatDTO();
+
+  public StatDTO getStats() {
+    StatDTO stat = new StatDTO();
     stat.setAvailableCount(ipRangeRepository.countByStatus(Status.AVAILABLE));
     stat.setInuseCount(ipRangeRepository.countByStatus(Status.IN_USE));
     stat.setReservedCount(ipRangeRepository.countByStatus(Status.RESERVED));
