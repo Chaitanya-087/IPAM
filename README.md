@@ -27,8 +27,6 @@
 
 - [8. Security](#8-security)
 
-- [9. Deployment](#9-deployment)
-
 ## 1. Introduction
 
 ### 1.1 Purpose
@@ -69,27 +67,3 @@ The scope of this project includes the development of a Java application using J
 
 ### 3.3 Swagger Documentation
 - The system should include Swagger documentation for API endpoints.
-
-## 4. System Architecture
-
-(Provide an overview of the system's architecture.)
-
-## 5. User Interface
-
-(Describe the user interface design and features.)
-
-## 6. Data Models
-
-(Define the data models used in the system.)
-
-## 7. Business Logic
-
-(Explain the business logic for freeing up reserved IP addresses.)
-
-## 8. Security
-
-(Describe security measures and considerations for the system.)
-
-## 9. Deployment
-
-(Explain how the system will be deployed.)
