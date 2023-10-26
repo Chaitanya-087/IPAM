@@ -52,7 +52,7 @@ const MuiDrawer = (props) => {
         <Drawer variant={variant} anchor='left' open={isOpen} onClose={handleClose}>
             <Box sx={{width}} role='presentation'>
                 <Toolbar sx={{display: "flex", alignItems: "center", justifyContent: "center"}}>
-                    <Typography variant='h6' color='#007fff' noWrap component='div'>
+                    <Typography variant='h6' color='#007fff' noWrap component='div' id="title">
                         IPAM
                     </Typography>
                 </Toolbar>

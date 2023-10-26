@@ -88,7 +88,7 @@ const LoginPage = () => {
                                     min='6'
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    id='current-password'
+                                    id='password'
                                 />
                                 {!showPassword ? (
                                     <VisibilityOffIcon className='pwd-icon' onClick={toggleShowPassword} />
@@ -97,7 +97,7 @@ const LoginPage = () => {
                                 )}
                             </div>
                         </div>
-                        <button className='auth-btn' type='submit'>
+                        <button className='auth-btn' type='submit' id="submit">
                             {isLoading ? (
                                 <div className='loader'>
                                     <BarLoader color='#fff' loading={isLoading} size={10} height={2} />

@@ -73,7 +73,7 @@ const SharedLayout = () => {
                             <StyledButton onClick={() => setIsDrawerOpen(true)} aria-label='open drawer'>
                                 <DragHandleIcon />
                             </StyledButton>
-                            <Typography variant='h6' noWrap component='div'>
+                            <Typography variant='h6' noWrap component='div' id="title">
                                 IPAM
                             </Typography>
                         </MobileBox>

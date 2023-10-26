@@ -1,4 +1,3 @@
-// import RequireAuth from "./require-auth";
 import SharedLayout from "../components/SharedLayout";
 
 const Root = () => {

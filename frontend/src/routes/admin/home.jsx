@@ -142,19 +142,19 @@ const ActionButton = ({id, status, hasDns, fetchData, fetchStats}) => {
 
     if (status === "AVAILABLE") {
         return (
-            <Button variant='contained' onClick={reserve}>
+            <Button variant='contained' onClick={reserve} id="reserve-btn">
                 Reserve
             </Button>
         );
     } else if (status === "IN_USE") {
         return (
-            <Button variant='contained' onClick={generate} disabled={hasDns}>
+            <Button variant='contained' onClick={generate} disabled={hasDns} id="dns-btn">
                 Generate DNS
             </Button>
         );
     } else {
         return (
-            <Button variant='contained' disabled>
+            <Button variant='contained' disabled id="reserve-btn">
                 Reserve
             </Button>
         );
@@ -229,7 +229,7 @@ const IPAddressesTable = ({fetchStats}) => {
                     backgroundColor: "transparent",
                     boxShadow: "none",
                 }}>
-                <h1>IP Addresses</h1>
+                <h1 id="ipaddress-title">IP Addresses</h1>
                 <IconButton onClick={handleOpen}>
                     <AddIcon />
                 </IconButton>
@@ -330,7 +330,7 @@ const IPAddressesTable = ({fetchStats}) => {
                     </Box>
                 </Fade>
             </Modal>
-            <ToastContainer />
+            <ToastContainer id="popup" />
         </React.Fragment>
     );
 };
@@ -373,7 +373,7 @@ const UsersTable = () => {
                     backgroundColor: "transparent",
                     boxShadow: "none",
                 }}>
-                <h1>Users</h1>
+                <h1 id="users-title">Users</h1>
             </Paper>
             <DataTable rows={rows} columns={columns} />
         </>
@@ -487,7 +487,7 @@ export default function Home() {
             <Box sx={{paddingTop: "1rem", borderBottom: "1px solid #e0e0e0"}}>
                 <Tabs value={currentTabIndex} onChange={handleChange}>
                     {tabs.map((tab, index) => (
-                        <Tab key={index} label={tab.label} />
+                        <Tab key={index} label={tab.label} id={tab.label} />
                     ))}
                 </Tabs>
             </Box>
