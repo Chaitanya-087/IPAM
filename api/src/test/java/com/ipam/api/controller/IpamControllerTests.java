@@ -416,7 +416,7 @@ class IpamControllerTests {
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
-  public void testGetIpAddressesByIpRangeId() throws Exception {
+  void testGetIpAddressesByIpRangeId() throws Exception {
     Long ipRangeId = 1L;
     List<IPAddress> expectedIpAddresses = new ArrayList<>(); // Define your expected IP addresses
 
@@ -432,7 +432,7 @@ class IpamControllerTests {
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_USER" })
-  public void testGetAvailableIpAddressesByIpRangeId() throws Exception {
+  void testGetAvailableIpAddressesByIpRangeId() throws Exception {
     Long ipRangeId = 1L;
     List<IPAddress> expectedAvailableIpAddresses = new ArrayList<>(); // Define your expected available IP addresses
 

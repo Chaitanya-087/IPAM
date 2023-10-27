@@ -92,7 +92,6 @@ public class IPRangeService {
       ipRangeRepository.save(ipRange);
       return "Ip range allocated";
     }
-
     return "Invalid operation";
   }
 

@@ -1,6 +1,7 @@
 package com.ipam.api.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
@@ -181,7 +182,7 @@ class IPAddressServiceUnitTest {
     String result = ipAddressService.assignDomainName(1L);
 
     assertEquals("Domain name assigned", result);
-    assertEquals(6,ipAddress.getDns().indexOf(".pro"));
+    assertTrue(ipAddress.getDns().contains(".pro"));
   }
 
   @Test

@@ -90,7 +90,6 @@ public class SubnetService {
       subnetRepository.save(subnet);
       return "Subnet is allocated";
     }
-
     return "Invalid operation";
   }
 

@@ -1,0 +1,12 @@
+a.active {
+    color: #007fff;
+    width: 100%;
+    background-color: hsla(210, 100%, 50%, 0.06);
+}
+
+a {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    gap: 1rem;
+}

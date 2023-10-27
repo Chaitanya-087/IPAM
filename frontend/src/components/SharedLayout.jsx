@@ -1,8 +1,6 @@
-import {AppBar, Badge, Box, Container, Toolbar, Typography} from "@mui/material";
-import NotificationsIcon from "@mui/icons-material/Notifications";
+import {AppBar, Box, Container, Toolbar, Typography} from "@mui/material";
 import React from "react";
 import {AccountCircle} from "@mui/icons-material";
-import MoreIcon from "@mui/icons-material/MoreVert";
 import useAuth from "../hooks/useAuth";
 import MuiDrawer from "./Drawer";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
@@ -19,11 +17,13 @@ const appBarStyles = {
     backgroundColor: "rgba(255,255,255,0.9)",
     color: "#007fff",
 };
+
 const center = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
 };
+
 const StyledButton = styled("button")(() => ({
     border: "1px solid rgb(218, 226, 237)",
     transitionProperty: "all",
@@ -73,38 +73,26 @@ const SharedLayout = () => {
                             <StyledButton onClick={() => setIsDrawerOpen(true)} aria-label='open drawer'>
                                 <DragHandleIcon />
                             </StyledButton>
-                            <Typography variant='h6' noWrap component='div' id="title">
+                            <Typography variant='h6' noWrap component='div' id='title'>
                                 IPAM
                             </Typography>
                         </MobileBox>
 
                         <Box sx={{flexGrow: 1}} />
 
-                        <Box sx={{display: {xs: "none", md: "flex", gap:"1rem"}}}>
-                            <StyledButton>
-                                <Badge badgeContent={3} color='error'>
-                                    <NotificationsIcon />
-                                </Badge>
-                            </StyledButton>
-                            <StyledButton aria-label='account of current user' aria-haspopup='true'>
-                                {getRole() === "ROLE_ADMIN" ? (
-                                    <>
-                                        <AdminPanelSettingsIcon /> admin
-                                    </>
-                                ) : getRole() === "ROLE_USER" ? (
-                                    <>
-                                        <AccountCircle /> {authState?.username}
-                                    </>
-                                ) : (
-                                    <AccountCircle />
-                                )}
-                            </StyledButton>
-                        </Box>
-                        <Box sx={{display: {xs: "flex", md: "none"}}}>
-                            <StyledButton>
-                                <MoreIcon />
-                            </StyledButton>
-                        </Box>
+                        <StyledButton aria-label='account of current user' aria-haspopup='true'>
+                            {getRole() === "ROLE_ADMIN" ? (
+                                <>
+                                    <AdminPanelSettingsIcon /> admin
+                                </>
+                            ) : getRole() === "ROLE_USER" ? (
+                                <>
+                                    <AccountCircle /> {authState?.username}
+                                </>
+                            ) : (
+                                <AccountCircle />
+                            )}
+                        </StyledButton>
                     </Toolbar>
                 </AppBar>
                 <Container sx={{maxWidth: "100vw", paddingBlock: "1rem"}}>

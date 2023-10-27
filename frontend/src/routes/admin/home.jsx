@@ -175,6 +175,87 @@ const IPAddressesTable = ({fetchStats}) => {
     const [ranges, setRanges] = useState([]);
     const [rangeId,setRangeId] = useState('');
 
+    const columns = [
+        {
+            id: "address",
+            label: "Address",
+            minWidth: 170,
+            component: function (value) {
+                return (
+                    <Typography paragraph m='0' fontWeight='700' fontSize='14px'>
+                        {value}
+                    </Typography>
+                );
+            },
+        },
+        {
+            id: "dns",
+            label: "DNS name",
+            minWidth: 120,
+            component: function (value) {
+                return (
+                    <Typography paragraph m='0' color='#007fff' fontWeight='700' noWrap>
+                        {value ?? "-----"}
+                    </Typography>
+                );
+            },
+        },
+        {
+            id: "status",
+            label: "Status",
+            minWidth: 100,
+            colorMap: {AVAILABLE: "success", IN_USE: "danger", RESERVED: "warning"},
+            component: function (value) {
+                return (
+                    <Chip key={value} color={this.colorMap[value]} size='sm'>
+                        {value}
+                    </Chip>
+                );
+            },
+        },
+        {
+            id: "expiration",
+            label: "Expiration",
+            minWidth: 170,
+            component: function (value) {
+                return (
+                    <Typography paragraph m='0' fontWeight='700' fontSize='12px'>
+                        {value ? new Date(value).toLocaleString() : "-----"}
+                    </Typography>
+                );
+            },
+        },
+        {
+            id: "updatedAt",
+            label: "Updated At",
+            minWidth: 170,
+            component: function (value) {
+                return (
+                    <Typography paragraph m='0' fontWeight='700' fontSize='12px'>
+                        {value ? new Date(value).toLocaleString() : "-----"}
+                    </Typography>
+                );
+            },
+        },
+        {
+            id: "user",
+            label: "User",
+            minWidth: 170,
+            component: function (value) {
+                return (
+                    <Typography paragraph m='0' fontWeight='700' fontSize='14px'>
+                        {value ? value.name : "-----"}
+                    </Typography>
+                );
+            },
+        },
+        {id: "status", label: "Actions", minWidth: 170, component: (value) => {
+            return (
+                <ActionButton  />
+            )
+        }},
+    ];
+
     const handleChange = (event) => {
         setRangeId(event.target.value);
     };
@@ -305,19 +386,19 @@ const IPAddressesTable = ({fetchStats}) => {
                                     <TableRow hover role='checkbox' tabIndex={-1} key={row.id}>
                                         {columns.map((column) => {
                                             const value = row[column.id];
-                                            if (column.id === "actions") {
-                                                return (
-                                                    <TableCell key={column.id} align={column.align}>
-                                                        <ActionButton
-                                                            id={row.id}
-                                                            status={row.status}
-                                                            hasDns={!!row.dns}
-                                                            fetchData={fetchData}
-                                                            fetchStats={fetchStats}
-                                                        />
-                                                    </TableCell>
-                                                );
-                                            }
+                                            // if (column.id === "actions") {
+                                            //     return (
+                                            //         <TableCell key={column.id} align={column.align}>
+                                            //             <ActionButton
+                                            //                 id={row.id}
+                                            //                 status={row.status}
+                                            //                 hasDns={!!row.dns}
+                                            //                 fetchData={fetchData}
+                                            //                 fetchStats={fetchStats}
+                                            //             />
+                                            //         </TableCell>
+                                            //     );
+                                            // }
                                             return (
                                                 <TableCell key={column.id} align={column.align}>
                                                     {column.component ? column.component(value) : value}

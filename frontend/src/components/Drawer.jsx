@@ -1,16 +1,4 @@
-import {
-    Box,
-    Divider,
-    Drawer,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
-    Toolbar,
-    Typography,
-    styled,
-} from "@mui/material";
+import {Box, Divider, Drawer, List, ListItem, Toolbar, Typography, styled} from "@mui/material";
 import HubIcon from "@mui/icons-material/Hub";
 import LayersIcon from "@mui/icons-material/Layers";
 import HomeIcon from "@mui/icons-material/Home";
@@ -18,6 +6,7 @@ import {NavLink} from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import {useNavigate} from "react-router-dom";
 import PropTypes from "prop-types";
+import "../styles/drawer.css";
 
 const StyledButton = styled("button")(() => ({
     border: "1px solid rgb(218, 226, 237)",
@@ -49,46 +38,27 @@ const MuiDrawer = (props) => {
         navigate("/login");
     };
     return (
-        <Drawer variant={variant} anchor='left' open={isOpen} onClose={handleClose}>
+        <Drawer variant={variant} anchor='left' open={isOpen} onClose={handleClose} onClick={handleClose}>
             <Box sx={{width}} role='presentation'>
                 <Toolbar sx={{display: "flex", alignItems: "center", justifyContent: "center"}}>
-                    <Typography variant='h6' color='#007fff' noWrap component='div' id="title">
+                    <Typography variant='h6' color='#007fff' noWrap component='div' id='title'>
                         IPAM
                     </Typography>
                 </Toolbar>
                 <List sx={{borderTop: "1px solid #e5eaf2"}}>
-                    <ListItem disablePadding>
-                        <ListItemButton>
-                            <ListItemIcon>
-                                <HomeIcon sx={{color: "#007fff"}} />
-                            </ListItemIcon>
-                            <NavLink to='/'>
-                                <ListItemText primary='Home' />
-                            </NavLink>
-                        </ListItemButton>
-                    </ListItem>
-                    <ListItem disablePadding>
-                        <ListItemButton>
-                            <ListItemIcon>
-                                <LayersIcon sx={{color: "#007fff"}} />
-                            </ListItemIcon>
-                            <NavLink to='/ip-ranges'>
-                                <ListItemText primary='IP Ranges' />
-                            </NavLink>
-                        </ListItemButton>
-                    </ListItem>
-                    <ListItem disablePadding>
-                        <ListItemButton>
-                            <ListItemIcon>
-                                <HubIcon sx={{color: "#007fff"}} />
-                            </ListItemIcon>
-                            <NavLink to='/subnets'>
-                                <ListItemText primary='Subnets' />
-                            </NavLink>
-                        </ListItemButton>
-                    </ListItem>
+                    <NavLink to='/'>
+                        <HomeIcon />
+                        <Typography>Home</Typography>
+                    </NavLink>
+                    <NavLink to='/subnets'>
+                        <LayersIcon />
+                        <Typography>Subnets</Typography>
+                    </NavLink>
+                    <NavLink to='ip-ranges'>
+                        <HubIcon />
+                        <Typography>IP Ranges</Typography>
+                    </NavLink>
                     <Divider />
-
                     <ListItem>
                         <StyledButton onClick={handleLogout} sx={{width: "100%"}}>
                             <Typography variant='button' display='block'>

@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Scanner;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
@@ -30,6 +29,8 @@ public class IPAddressService {
 
   @Autowired
   private ResourceLoader resourceLoader;
+  
+  private Random random = new Random();
 
   public IPAddress save(IPAddress body) {
     IPAddress ipAddress = new IPAddress();
@@ -86,18 +87,17 @@ public class IPAddressService {
     return "Invalid operation";
   }
 
-  private String generateRandomString() {
-        String salt = String.valueOf(new Random().nextInt(10,100));
-      try (InputStream inputStream = resourceLoader.getResource("classpath:words.txt").getInputStream();
-             Scanner scanner = new Scanner(inputStream, StandardCharsets.UTF_8.name())) {
-            List<String> lines = scanner.tokens().toList();
-            int randomIndex = new Random().nextInt(lines.size());
-            return lines.get(randomIndex).concat(salt);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "";
-        }
-    }
+  private String generateRandomString() throws IOException {
+    String salt = String.valueOf(random.nextInt(10, 100));
+    InputStream inputStream = resourceLoader
+      .getResource("classpath:words.txt")
+      .getInputStream();
+    Scanner scanner = new Scanner(inputStream, StandardCharsets.UTF_8.name());
+    List<String> lines = scanner.tokens().toList();
+    int randomIndex = random.nextInt(lines.size());
+    scanner.close();
+    return lines.get(randomIndex).concat(salt);
+  }
 
   public StatDTO getStats() {
     StatDTO stat = new StatDTO();

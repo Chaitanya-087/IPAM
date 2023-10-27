@@ -156,11 +156,16 @@ const IPRanges = () => {
         setPage(0);
     };
 
-    const reserve = async (id) => {
-        await axiosPrivate.post(`/api/ipam/reserve/network-object/${id}`, {purpose: "purpose"});
-        toast(`🦄 ip address reserved`, toastConfig);
-        fetchData();
-        fetchStats();
+    const reserve = (id) => {
+        // await axiosPrivate.post(`/api/ipam/reserve/network-object/${id}`, {purpose: "purpose"});
+        toast.promise(axiosPrivate.post(`/api/ipam/reserve/network-object/${id}`, {purpose: "purpose"}), {
+            pending: "Reserving ip address...",
+            success:(data) => {
+                console.log(data);
+                return "🦄 ip address reserved";
+            },
+            error: "🦄 ip address reserved",
+        }, toastConfig );
     };
 
     const post = async (event) => {

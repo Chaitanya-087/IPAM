@@ -25,46 +25,67 @@ public class ReservationService {
   private NetworkObjectRepository networkObjectsRepository;
 
   public String reserve(Long id, Reservation body) {
-    Optional<NetworkObject> networkObjectOpt = networkObjectsRepository.findById(id);
-    if (networkObjectOpt.isPresent()) {
-      if (networkObjectOpt.get() instanceof IPAddress ipAddress) {
-        reserveNetworkObj(ipAddress, LocalDateTime.now().plusHours(1));
-        return "ip address reservation successful";
-      } else if (networkObjectOpt.get() instanceof IPRange ipRange) {
-        if (ipRange.getStatus().equals(Status.AVAILABLE)) {
-          for (IPAddress ipAddress : ipRange.getIpAddresses()) {
-            reserveNetworkObj(ipAddress, LocalDateTime.now().plusHours(1));
-          }
-          reserveNetworkObj(ipRange, LocalDateTime.now().plusHours(1));
-          return "ip range reservation successful";
-        } else {
-          return "ip range is not free";
-        }
-      } else if (networkObjectOpt.get() instanceof Subnet subnet) {
-        if (subnet.getStatus().equals(Status.AVAILABLE)) {
-            for (IPAddress ipAddress : subnet.getIpAddresses()) {
-                reserveNetworkObj(ipAddress, LocalDateTime.now().plusDays(1));
-            } 
-            reserveNetworkObj(subnet, LocalDateTime.now().plusDays(1));
-          return "subnet reservation successful";
-        } else {
-          return "subnet is not free";
-        }
-      }
+    Optional<NetworkObject> networkObjectOpt = networkObjectsRepository.findById(
+      id
+    );
+
+    if (networkObjectOpt.isEmpty()) {
+      return "Invalid Operation";
     }
+
+    NetworkObject networkObject = networkObjectOpt.get();
+
+    if (networkObject instanceof IPAddress ipAddress) {
+      return reserveIPAddress(ipAddress,body);
+    } else if (networkObject instanceof IPRange ipRange) {
+      return reserveIPRange(ipRange,body);
+    } else if (networkObject instanceof Subnet subnet) {
+      return reserveSubnet(subnet,body);
+    }
+
     return "Invalid Operation";
   }
 
-  private void reserveNetworkObj(
+  private String reserveIPAddress(IPAddress ipAddress,Reservation body) {
+    reserveNetworkObject(ipAddress, LocalDateTime.now().plusHours(1), body.getPurpose());
+    return "ip address reservation successful";
+  }
+
+  private String reserveIPRange(IPRange ipRange, Reservation body) {
+    if (ipRange.getStatus().equals(Status.AVAILABLE)) {
+      for (IPAddress ipAddress : ipRange.getIpAddresses()) {
+        reserveNetworkObject(ipAddress, LocalDateTime.now().plusHours(1), body.getPurpose());
+      }
+      reserveNetworkObject(ipRange, LocalDateTime.now().plusHours(1), body.getPurpose());
+      return "ip range reservation successful";
+    } else {
+      return "ip range is not free";
+    }
+  }
+
+  private String reserveSubnet(Subnet subnet, Reservation body) {
+    if (subnet.getStatus().equals(Status.AVAILABLE)) {
+      for (IPAddress ipAddress : subnet.getIpAddresses()) {
+        reserveNetworkObject(ipAddress, LocalDateTime.now().plusDays(1), body.getPurpose());
+      }
+      reserveNetworkObject(subnet, LocalDateTime.now().plusDays(1), body.getPurpose());
+      return "subnet reservation successful";
+    } else {
+      return "subnet is not free";
+    }
+  }
+
+  private void reserveNetworkObject(
     NetworkObject networkObject,
-    LocalDateTime releaseTime
+    LocalDateTime releaseTime,
+    String purpose
   ) {
     if (networkObject.getStatus().equals(Status.AVAILABLE)) {
       networkObject.setStatus(Status.RESERVED);
       Reservation reservation = new Reservation();
       reservation.setNetworkObject(networkObject);
       reservation.setReleaseDate(releaseTime);
-      reservation.setPurpose("purpose");
+      reservation.setPurpose(purpose);
       reservationRepository.save(reservation);
     }
   }

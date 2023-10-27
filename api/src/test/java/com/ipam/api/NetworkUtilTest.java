@@ -6,10 +6,10 @@ import org.junit.jupiter.api.Test;
 
 import com.ipam.api.util.NetworkUtil;
 
-public class NetworkUtilTest {
+class NetworkUtilTest {
 
     @Test
-    public void testIpToLong() {
+    void testIpToLong() {
         NetworkUtil networkUtil = new NetworkUtil();
 
         String ipAddress = "192.168.1.1";
@@ -21,7 +21,7 @@ public class NetworkUtilTest {
     }
 
     @Test
-    public void testLongToIp() {
+    void testLongToIp() {
         NetworkUtil networkUtil = new NetworkUtil();
 
         long ip = 3232235777L;
