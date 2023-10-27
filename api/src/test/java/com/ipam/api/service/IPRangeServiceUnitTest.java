@@ -8,12 +8,15 @@ import static org.mockito.Mockito.when;
 
 import com.ipam.api.dto.IPRangeDTO;
 import com.ipam.api.dto.StatDTO;
+import com.ipam.api.entity.IPAddress;
 import com.ipam.api.entity.IPRange;
 import com.ipam.api.entity.Status;
 import com.ipam.api.entity.User;
 import com.ipam.api.repository.IPRangeRepository;
 import com.ipam.api.repository.UserRepository;
+import com.ipam.api.util.NetworkUtil;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
@@ -23,6 +26,7 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,6 +44,10 @@ class IPRangeServiceUnitTest {
 
   private IPRange ipRange;
 
+  @Mock
+  private NetworkUtil networkUtil;
+
+  //TODO:redo this test
   @BeforeAll
   public void setUp() {
     ipRange = new IPRange();
@@ -49,18 +57,39 @@ class IPRangeServiceUnitTest {
     ipRange.setUpdatedAt(LocalDateTime.now());
     ipRange.setExpiration(null);
     ipRange.setStatus(Status.AVAILABLE);
-    ipRange.setStartAddress("192.168.0.1");
-    ipRange.setEndAddress("192.168.0.10");
+    ipRange.setStartAddress("192.168.1.1");
+    ipRange.setEndAddress("192.168.1.5");
+    ipRange.setIpAddresses(new ArrayList<>());
   }
 
+  //TODO: redo this test
   @Test
   void givenIPRangeRequest_whenSaved_thenReturnIPRangeDTO() {
-    given(ipRangeRepository.save(any(IPRange.class))).willReturn(ipRange);
+    IPRange inputRange = new IPRange();
+    inputRange.setStartAddress("192.168.1.1");
+    inputRange.setEndAddress("192.168.1.5");
 
-    IPRangeDTO result = ipRangeService.save(ipRange);
+    when(networkUtil.ipToLong("192.168.1.1")).thenReturn(3232235777L);
+    when(networkUtil.ipToLong("192.168.1.5")).thenReturn(3232235781L);
 
-    assertEquals(ipRange.getStartAddress(), result.getStartAddress());
-    assertEquals(ipRange.getEndAddress(), result.getEndAddress());
+    List<IPAddress> mockIpAddresses = new ArrayList<>();
+    for (long current = 3232235777L; current <= 3232235781L; current++) {
+      String ip = networkUtil.longToIp(current);
+      IPAddress ipAddress = new IPAddress();
+      ipAddress.setAddress(ip);
+      mockIpAddresses.add(ipAddress);
+    }
+
+    ipRange.setIpAddresses(mockIpAddresses);
+
+    when(ipRangeRepository.save(Mockito.any(IPRange.class)))
+      .thenReturn(ipRange);
+
+    IPRangeDTO result = ipRangeService.save(inputRange);
+
+    assertEquals("192.168.1.1", result.getStartAddress());
+    assertEquals("192.168.1.5", result.getEndAddress());
+    assertEquals(5, result.getSize().intValue());
   }
 
   @Test
@@ -97,31 +126,45 @@ class IPRangeServiceUnitTest {
     assertEquals(ipRange.getStartAddress(), result.get(0).getStartAddress());
   }
 
+  //TODO: redo this test
   @Test
   void testAllocateValidIPRangeAndUser() {
-    Long ipRangeId = 1L;
-    Long userId = 2L;
+    long ipRangeId = 1L;
+    long userId = 2L;
 
     IPRange ipRange = new IPRange();
+    ipRange.setId(ipRangeId);
     ipRange.setStatus(Status.AVAILABLE);
 
     User user = new User();
+    user.setId(userId);
+
+    IPAddress ipAddress1 = new IPAddress();
+    ipAddress1.setStatus(Status.AVAILABLE);
+
+    IPAddress ipAddress2 = new IPAddress();
+    ipAddress2.setStatus(Status.AVAILABLE);
+
+    ipRange.getIpAddresses().add(ipAddress1);
+    ipRange.getIpAddresses().add(ipAddress2);
 
     when(ipRangeRepository.findById(ipRangeId))
       .thenReturn(Optional.of(ipRange));
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    when(ipRangeRepository.save(any(IPRange.class))).thenReturn(ipRange);
 
     String result = ipRangeService.allocate(ipRangeId, userId);
 
-    assertEquals(
-      "iprange allocated with expiration date - " + ipRange.getExpiration(),
-      result
-    );
+    assertEquals("Ip range allocated", result);
+
+    assertEquals(Status.IN_USE, ipAddress1.getStatus());
+    assertEquals(Status.IN_USE, ipAddress2.getStatus());
+    assertEquals(user, ipAddress1.getUser());
+    assertEquals(user, ipAddress2.getUser());
     assertEquals(Status.IN_USE, ipRange.getStatus());
     assertEquals(user, ipRange.getUser());
   }
 
+  //TODO: redo this test
   @Test
   void testAllocateInvalidIPRange() {
     Long ipRangeId = 1L;
@@ -139,6 +182,7 @@ class IPRangeServiceUnitTest {
     assertEquals("Invalid operation", result);
   }
 
+  //TODO: redo this test
   @Test
   void testAllocateInvalidUser() {
     Long ipRangeId = 1L;

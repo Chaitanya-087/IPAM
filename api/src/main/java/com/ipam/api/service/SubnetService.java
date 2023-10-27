@@ -77,13 +77,18 @@ public class SubnetService {
       subnetOpt.get().getStatus().equals(Status.AVAILABLE)
     ) {
       Subnet subnet = subnetOpt.get();
+      for (IPAddress ipAddress : subnet.getIpAddresses()) {
+        if (ipAddress.getStatus().equals(Status.AVAILABLE)) {
+          ipAddress.setStatus(Status.IN_USE);
+          ipAddress.setUser(userOpt.get());
+          ipAddress.setExpiration(LocalDateTime.now().plusDays(1));
+        }
+      }
       subnet.setStatus(Status.IN_USE);
       subnet.setExpiration(LocalDateTime.now().plusDays(1));
       subnet.setUser(userRepository.findById(userId).get());
       subnetRepository.save(subnet);
-      return (
-        "subnet allocated with expiration date - " + subnet.getExpiration()
-      );
+      return "Subnet is allocated";
     }
 
     return "Invalid operation";

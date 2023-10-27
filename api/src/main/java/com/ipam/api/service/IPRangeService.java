@@ -77,7 +77,7 @@ public class IPRangeService {
     if (userOpt.isEmpty()) {
       return "Invalid user";
     }
-    if (ipRangeOpt.isPresent()) {
+    if (ipRangeOpt.isPresent() && ipRangeOpt.get().getStatus().equals(Status.AVAILABLE)) {
       IPRange ipRange = ipRangeOpt.get();
       for (IPAddress ipAddress : ipRange.getIpAddresses()) {
         if (ipAddress.getStatus().equals(Status.AVAILABLE)) {
