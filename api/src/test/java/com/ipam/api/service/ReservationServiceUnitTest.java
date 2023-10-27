@@ -1,13 +1,12 @@
 package com.ipam.api.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 
 import com.ipam.api.dto.ReservationDTO;
 import com.ipam.api.entity.IPAddress;
 import com.ipam.api.entity.IPRange;
-import com.ipam.api.entity.NetworkObject;
 import com.ipam.api.entity.Reservation;
 import com.ipam.api.entity.Status;
 import com.ipam.api.entity.Subnet;
@@ -16,17 +15,13 @@ import com.ipam.api.repository.ReservationRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@TestInstance(Lifecycle.PER_CLASS)
 class ReservationServiceUnitTest {
 
   @InjectMocks
@@ -38,58 +33,143 @@ class ReservationServiceUnitTest {
   @Mock
   private NetworkObjectRepository networkObjectsRepository;
 
-  private Reservation reservation;
-  private NetworkObject networkObject;
+  @Test
+  void testReserveWithIPAddress() {
+    long networkObjectId = 1L;
+    Reservation reservation = new Reservation();
 
-  @BeforeAll
-  public void setUp() {
-    networkObject = new IPAddress();
-    networkObject.setId(1L);
-    networkObject.setUser(null);
-    networkObject.setCreatedAt(LocalDateTime.now());
-    networkObject.setUpdatedAt(LocalDateTime.now());
-    networkObject.setExpiration(null);
-    networkObject.setStatus(Status.AVAILABLE);
+    IPAddress ipAddress = new IPAddress();
+    ipAddress.setStatus(Status.AVAILABLE);
 
-    reservation = new Reservation();
-    reservation.setId(1l);
-    reservation.setPurpose("purpose");
-    reservation.setNetworkObject(networkObject);
-    reservation.setReleaseDate(LocalDateTime.now().plusHours(1));
+    when(networkObjectsRepository.findById(networkObjectId))
+      .thenReturn(Optional.of(ipAddress));
+
+    String result = reservationService.reserve(networkObjectId, reservation);
+
+    assertEquals("ip address reservation successful", result);
   }
 
   @Test
-  void testReserve_ValidReservation() {
-    String expectedResult = "network object reserved";
+  void testReserveWithIPRange() {
+    long networkObjectId = 1L;
+    Reservation reservation = new Reservation();
 
-    given(networkObjectsRepository.findById(any(Long.class)))
-      .willReturn(Optional.of(networkObject));
+    IPRange ipRange = new IPRange();
+    ipRange.setStatus(Status.AVAILABLE);
 
-    String result = reservationService.reserve(1L, reservation);
+    IPAddress ipAddress1 = new IPAddress();
+    ipAddress1.setStatus(Status.AVAILABLE);
 
-    assertEquals(Status.RESERVED, networkObject.getStatus());
-    assertEquals(expectedResult, result);
+    IPAddress ipAddress2 = new IPAddress();
+    ipAddress2.setStatus(Status.AVAILABLE);
+
+    ipRange.getIpAddresses().add(ipAddress1);
+    ipRange.getIpAddresses().add(ipAddress2);
+
+    ipRange.getIpAddresses().add(ipAddress1);
+    ipRange.getIpAddresses().add(ipAddress2);
+
+    when(networkObjectsRepository.findById(networkObjectId))
+      .thenReturn(Optional.of(ipRange));
+
+    String result = reservationService.reserve(networkObjectId, reservation);
+
+    assertEquals("ip range reservation successful", result);
   }
 
   @Test
-  void testReserve_InvalidOperation() {
-    // Change the status of the network object to RESERVED (Invalid scenario)
-    networkObject.setStatus(Status.RESERVED);
+  void testReserveWithSubnet() {
+    long networkObjectId = 1L;
+    Reservation reservation = new Reservation();
 
-    String expectedResult = "Invalid operation";
+    Subnet subnet = new Subnet();
+    subnet.setStatus(Status.AVAILABLE);
 
-    String result = reservationService.reserve(1L, reservation);
+    IPAddress ipAddress1 = new IPAddress();
+    ipAddress1.setStatus(Status.AVAILABLE);
 
-    // Verify that the status of the network object is not changed
-    assertEquals(Status.RESERVED, networkObject.getStatus());
+    IPAddress ipAddress2 = new IPAddress();
+    ipAddress2.setStatus(Status.AVAILABLE);
 
-    // Verify the expected result message
-    assertEquals(expectedResult, result);
+    subnet.getIpAddresses().add(ipAddress1);
+    subnet.getIpAddresses().add(ipAddress2);
+
+    when(networkObjectsRepository.findById(networkObjectId))
+      .thenReturn(Optional.of(subnet));
+
+    String result = reservationService.reserve(networkObjectId, reservation);
+
+    assertEquals("subnet reservation successful", result);
+  }
+
+  @Test
+  void testReserveWithInvalidNetworkObject() {
+    long networkObjectId = 1L;
+    Reservation reservation = new Reservation();
+
+    when(networkObjectsRepository.findById(networkObjectId))
+      .thenReturn(Optional.empty());
+
+    String result = reservationService.reserve(networkObjectId, reservation);
+
+    assertEquals("Invalid Operation", result);
+  }
+
+  @Test
+  void testReserveWithOccupiedIPRange() {
+    long networkObjectId = 1L;
+    Reservation reservation = new Reservation();
+
+    IPRange ipRange = new IPRange();
+    ipRange.setStatus(Status.IN_USE);
+
+    IPAddress ipAddress1 = new IPAddress();
+    ipAddress1.setStatus(Status.IN_USE);
+
+    IPAddress ipAddress2 = new IPAddress();
+    ipAddress2.setStatus(Status.IN_USE);
+
+    ipRange.getIpAddresses().add(ipAddress1);
+    ipRange.getIpAddresses().add(ipAddress2);
+
+    ipRange.getIpAddresses().add(ipAddress1);
+    ipRange.getIpAddresses().add(ipAddress2);
+
+    when(networkObjectsRepository.findById(networkObjectId))
+      .thenReturn(Optional.of(ipRange));
+
+    String result = reservationService.reserve(networkObjectId, reservation);
+
+    assertEquals("ip range is not free", result);
+  }
+
+  @Test
+  void testReserveWithOccupiedSubnet() {
+    long networkObjectId = 1L;
+    Reservation reservation = new Reservation();
+
+    Subnet subnet = new Subnet();
+    subnet.setStatus(Status.IN_USE);
+
+    IPAddress ipAddress1 = new IPAddress();
+    ipAddress1.setStatus(Status.IN_USE);
+
+    IPAddress ipAddress2 = new IPAddress();
+    ipAddress2.setStatus(Status.IN_USE);
+
+    subnet.getIpAddresses().add(ipAddress1);
+    subnet.getIpAddresses().add(ipAddress2);
+
+    when(networkObjectsRepository.findById(networkObjectId))
+      .thenReturn(Optional.of(subnet));
+
+    String result = reservationService.reserve(networkObjectId, reservation);
+
+    assertEquals("subnet is not free", result);
   }
 
   @Test
   void testFindAll() {
-    // Create some sample reservations for testing
     Reservation reservation = new Reservation();
     IPAddress ipAddress = new IPAddress();
     ipAddress.setId(1l);
@@ -136,12 +216,11 @@ class ReservationServiceUnitTest {
     reservation3.setReleaseDate(LocalDateTime.now().plusHours(1));
     reservation3.setNetworkObject(subnet);
 
-    given(reservationRepository.findAll()).willReturn(List.of(reservation,reservation2,reservation3));
+    given(reservationRepository.findAll())
+      .willReturn(List.of(reservation, reservation2, reservation3));
 
     List<ReservationDTO> reservations = reservationService.findAll();
 
-    // Verify that the method returns the list of reservations
     assertEquals(3, reservations.size());
-    // assertEquals(reservation.getId(), reservations.get(0));
   }
 }

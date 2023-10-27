@@ -3,16 +3,21 @@ package com.ipam.api.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.ipam.api.dto.StatDTO;
 import com.ipam.api.dto.SubnetDTO;
+import com.ipam.api.entity.IPAddress;
 import com.ipam.api.entity.Status;
 import com.ipam.api.entity.Subnet;
 import com.ipam.api.entity.User;
 import com.ipam.api.repository.SubnetRepository;
 import com.ipam.api.repository.UserRepository;
+import com.ipam.api.util.NetworkUtil;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +40,9 @@ class SubnetServiceUnitTest {
   @Mock
   private UserRepository userRepository;
 
+  @Mock
+  private NetworkUtil networkUtil;
+
   private Subnet subnet;
 
   @BeforeEach
@@ -45,23 +53,47 @@ class SubnetServiceUnitTest {
     subnet.setCreatedAt(LocalDateTime.now());
     subnet.setUpdatedAt(LocalDateTime.now());
     subnet.setExpiration(null);
-    subnet.setName("TestSubnet");
-    subnet.setCidr("192.168.0.0/24");
+    subnet.setName("Test Subnet");
+    subnet.setCidr("192.168.1.0/24");
     subnet.setMask("255.255.255.0");
-    subnet.setGateway("192.168.0.1");
+    subnet.setGateway("192.168.1.1");
+    subnet.setIpAddresses(new ArrayList<>());
     subnet.setStatus(Status.AVAILABLE);
   }
 
   @Test
   void givenSubnetRequest_whenSaved_thenReturnSubnetDTO() {
-    given(subnetRepository.save(any(Subnet.class))).willReturn(subnet);
+    Subnet inputSubnet = new Subnet();
+    inputSubnet.setName("Test Subnet");
+    inputSubnet.setCidr("192.168.1.0/24");
+    inputSubnet.setMask("255.255.255.0");
+    inputSubnet.setGateway("192.168.1.1");
+    when(networkUtil.ipToLong("192.168.1.0")).thenReturn(3232235776L);
 
-    SubnetDTO result = subnetService.save(subnet);
+    List<IPAddress> mockIpAddresses = new ArrayList<>();
+    int size = (1 << (32 - 24)); // Calculate the number of IP addresses in the subnet
+    for (int i = 1; i < size - 1; i++) {
+      IPAddress ipAddress = new IPAddress();
+      when(networkUtil.longToIp(any(Long.class))).thenReturn("mockIPAddress");
+      mockIpAddresses.add(ipAddress);
+    }
+    // Mock the behavior of subnetRepository
+    subnet.setIpAddresses(mockIpAddresses);
+    Subnet savedSubnet = new Subnet();
+    savedSubnet.setId(1L);
 
-    assertEquals(subnet.getName(), result.getName());
-    assertEquals(subnet.getCidr(), result.getCidr());
-    assertEquals(subnet.getMask(), result.getMask());
-    assertEquals(subnet.getGateway(), result.getGateway());
+    when(subnetRepository.save(Mockito.any(Subnet.class))).thenReturn(subnet);
+
+    // Call the save method
+    SubnetDTO result = subnetService.save(inputSubnet);
+
+    // Verify the result
+    assertEquals("Test Subnet", result.getName());
+    assertEquals("192.168.1.0/24", result.getCidr());
+
+    // Verify the number of IP addresses in the subnet
+    int expectedIpAddressCount = (1 << (32 - 24)) - 2; // Subtract 2 for network address and broadcast address
+    assertEquals(expectedIpAddressCount, result.getSize().intValue());
   }
 
   @Test
@@ -100,23 +132,45 @@ class SubnetServiceUnitTest {
 
   @Test
   void testAllocateValidSubnetAndUser() {
-    Long subnetId = 1L;
-    Long userId = 2L;
+    long userId = 1L;
+    long subnetId = 2L;
+
+    // Create mock Subnet and User objects
+    Subnet subnet = new Subnet();
+    subnet.setId(subnetId);
+    subnet.setStatus(Status.AVAILABLE);
 
     User user = new User();
+    user.setId(userId);
 
+    // Create mock IPAddress objects with the status AVAILABLE
+    IPAddress ipAddress1 = new IPAddress();
+    ipAddress1.setStatus(Status.AVAILABLE);
+
+    IPAddress ipAddress2 = new IPAddress();
+    ipAddress2.setStatus(Status.AVAILABLE);
+
+    subnet.getIpAddresses().add(ipAddress1);
+    subnet.getIpAddresses().add(ipAddress2);
+
+    // Set up the behavior of the subnetOpt and userOpt mocks
     when(subnetRepository.findById(subnetId)).thenReturn(Optional.of(subnet));
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-    when(subnetRepository.save(any(Subnet.class))).thenReturn(subnet);
 
+    // Call the allocate method
     String result = subnetService.allocate(subnetId, userId);
 
-    assertEquals(
-      "subnet allocated with expiration date - " + subnet.getExpiration(),
-      result
-    );
+    // Verify the result
+    assertEquals("Subnet is allocated", result);
+
+    // Verify that IPAddress statuses and Subnet status were updated
+    assertEquals(Status.IN_USE, ipAddress1.getStatus());
+    assertEquals(Status.IN_USE, ipAddress2.getStatus());
     assertEquals(Status.IN_USE, subnet.getStatus());
     assertEquals(user, subnet.getUser());
+
+    // Verify that subnetRepository.save was called
+    verify(subnetRepository, times(1)).save(subnet);
   }
 
   @Test

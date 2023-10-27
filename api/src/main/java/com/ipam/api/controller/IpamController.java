@@ -99,6 +99,22 @@ public class IpamController {
     return ResponseEntity.ok().body(new MessageResponse(ipAddressService.assignDomainName(ipAddresId)));
   }
 
+  @GetMapping("/ipranges/{ipRangeId}/ipaddresses")
+  @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
+  public List<IPAddress> getIpAddressesByIpRangeId(
+    @PathVariable("ipRangeId") Long ipRangeId
+  ) {
+    return ipRangeService.findAllIpAddress(ipRangeId);
+  }
+
+  @GetMapping("/ipranges/{ipRangeId}/ipaddresses/available")
+  @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
+  public List<IPAddress> getAvailableIpAddressesByIpRangeId(
+    @PathVariable("ipRangeId") Long ipRangeId
+  ) {
+    return ipRangeService.findAllAvailableAddressesInRange(ipRangeId);
+  }
+
   @GetMapping("/admin/ip-scan")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
   public StatDTO adminIpScan() {
@@ -133,6 +149,8 @@ public class IpamController {
   ) {
     return ipRangeService.findByUserId(userId);
   }
+
+
 
   @PostMapping("/allocate/ipranges/{ipRangeId}/users/{userId}")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")

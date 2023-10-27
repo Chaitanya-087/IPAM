@@ -2,11 +2,13 @@ package com.ipam.api.service;
 
 import com.ipam.api.dto.StatDTO;
 import com.ipam.api.dto.SubnetDTO;
+import com.ipam.api.entity.IPAddress;
 import com.ipam.api.entity.Status;
 import com.ipam.api.entity.Subnet;
 import com.ipam.api.entity.User;
 import com.ipam.api.repository.SubnetRepository;
 import com.ipam.api.repository.UserRepository;
+import com.ipam.api.util.NetworkUtil;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -22,12 +24,25 @@ public class SubnetService {
   @Autowired
   private UserRepository userRepository;
 
+  @Autowired
+  private NetworkUtil networkUtil;
+
   public SubnetDTO save(Subnet body) {
     Subnet subnet = new Subnet();
     subnet.setName(body.getName());
     subnet.setCidr(body.getCidr());
     subnet.setMask(body.getMask());
     subnet.setGateway(body.getGateway());
+    String[] parts = body.getCidr().split("/");
+    long start = networkUtil.ipToLong(parts[0]);
+    int mask = Integer.parseInt(parts[1]);
+    long subnetSize = 1L << (32 - mask);
+    for (int i = 1; i < subnetSize - 1; i++) {
+      String ip = networkUtil.longToIp(start + i);
+      IPAddress ipAddress = new IPAddress();
+      ipAddress.setAddress(ip);
+      subnet.getIpAddresses().add(ipAddress);
+    }
     return convertToDto(subnetRepository.save(subnet));
   }
 
@@ -62,13 +77,18 @@ public class SubnetService {
       subnetOpt.get().getStatus().equals(Status.AVAILABLE)
     ) {
       Subnet subnet = subnetOpt.get();
+      for (IPAddress ipAddress : subnet.getIpAddresses()) {
+        if (ipAddress.getStatus().equals(Status.AVAILABLE)) {
+          ipAddress.setStatus(Status.IN_USE);
+          ipAddress.setUser(userOpt.get());
+          ipAddress.setExpiration(LocalDateTime.now().plusDays(1));
+        }
+      }
       subnet.setStatus(Status.IN_USE);
       subnet.setExpiration(LocalDateTime.now().plusDays(1));
       subnet.setUser(userRepository.findById(userId).get());
       subnetRepository.save(subnet);
-      return (
-        "subnet allocated with expiration date - " + subnet.getExpiration()
-      );
+      return "Subnet is allocated";
     }
 
     return "Invalid operation";
@@ -94,13 +114,7 @@ public class SubnetService {
     subnetDTO.setCidr(subnet.getCidr());
     subnetDTO.setMask(subnet.getMask());
     subnetDTO.setGateway(subnet.getGateway());
-    subnetDTO.setSize(calculateSubnetSize(subnet.getCidr()));
+    subnetDTO.setSize((long) subnet.getIpAddresses().size());
     return subnetDTO;
-  }
-
-  private long calculateSubnetSize(String cidrNotation) {
-    String[] parts = cidrNotation.split("/");
-    int prefixLength = Integer.parseInt(parts[1]);
-    return (long) Math.pow(2, (double) 32 - prefixLength);
   }
 }
