@@ -67,7 +67,9 @@ The scope of this project includes the development of a Java application using J
 
 ### 3.1 Technology Stack
 - Backend: Java 17, Spring Boot 3
-- Frontend: React for the user interface
+- Frontend: React, Material UI 
+- Database: MySQL
+- Testing: Mockito, selenium
 
 ### 3.2 User Interface
 - The system must provide a user-friendly React-based UI for interacting with IP address management functionalities.
