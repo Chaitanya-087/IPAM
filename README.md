@@ -2,7 +2,7 @@
 - [ ] [BackEnd Docs](#task-1)
 - [ ] [FrontEnd Docs](#task-2)
 - [X] [Database Layer](https://github.com/Chaitanya-087/IPAM/blob/main/api/ipam_ER_Diagram.png)
-- [ ] [Test Report](#task-4)
+- [X] [Test Report](https://github.com/Chaitanya-087/IPAM/blob/main/api/backend_test_coverage_report.png)
 
 # Requirements
 ## IPAM - IP Address Management System
