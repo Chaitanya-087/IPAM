@@ -1,11 +1,18 @@
 package com.ipam.api.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.when;
 
+import com.ipam.api.controller.exception.InvalidException;
+import com.ipam.api.controller.exception.NotFoundException;
 import com.ipam.api.dto.IPRangeDTO;
+import com.ipam.api.dto.IPRangeForm;
+import com.ipam.api.dto.PageResponse;
 import com.ipam.api.dto.StatDTO;
 import com.ipam.api.entity.IPAddress;
 import com.ipam.api.entity.IPRange;
@@ -27,6 +34,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 @ExtendWith(MockitoExtension.class)
 @TestInstance(Lifecycle.PER_CLASS)
@@ -46,7 +56,6 @@ class IPRangeServiceUnitTest {
   @Mock
   private NetworkUtil networkUtil;
 
-  //TODO:redo this test
   @BeforeAll
   public void setUp() {
     ipRange = new IPRange();
@@ -61,10 +70,22 @@ class IPRangeServiceUnitTest {
     ipRange.setIpAddresses(new ArrayList<>());
   }
 
-  //TODO: redo this test
   @Test
-  void givenIPRangeRequest_whenSaved_thenReturnIPRangeDTO() {
-    IPRange inputRange = new IPRange();
+  void testInvalidRangeSave() {
+    IPRangeForm inputRange = new IPRangeForm();
+    inputRange.setStartAddress("Invalid");
+    inputRange.setEndAddress("Invalid");
+      
+      when(networkUtil.isValidIp(any(String.class))).thenReturn(false);
+
+      assertThrows(InvalidException.class, () -> {
+        ipRangeService.save(inputRange);
+      });
+  }
+
+  @Test
+  void testSavingValidRange() {
+    IPRangeForm inputRange = new IPRangeForm();
     inputRange.setStartAddress("192.168.1.1");
     inputRange.setEndAddress("192.168.1.5");
 
@@ -83,7 +104,7 @@ class IPRangeServiceUnitTest {
 
     when(ipRangeRepository.save(Mockito.any(IPRange.class)))
       .thenReturn(ipRange);
-
+    when(networkUtil.isValidIp(any(String.class))).thenReturn(true);
     IPRangeDTO result = ipRangeService.save(inputRange);
 
     assertEquals("192.168.1.1", result.getStartAddress());
@@ -93,39 +114,50 @@ class IPRangeServiceUnitTest {
 
   @Test
   void givenIPRanges_whenFindAll_thenReturnIPRangeDTOs() {
-    given(ipRangeRepository.findAll()).willReturn(List.of(ipRange));
+    Page<IPRange> ipRangePage = new PageImpl<>(List.of(ipRange));
+    when(ipRangeRepository.findAll(any(PageRequest.class))).thenReturn(ipRangePage);
 
-    List<IPRangeDTO> result = ipRangeService.findAll();
+    PageResponse<IPRange> result = ipRangeService.findAll(0,10);
 
-    assertEquals(1, result.size());
-    assertEquals(ipRange.getStartAddress(), result.get(0).getStartAddress());
+    assertEquals(1, result.getTotalElements());
   }
 
   @Test
   void givenAvailableIPRanges_whenFindAllAvailable_thenReturnAvailableIPRangeDTOs() {
     ipRange.setStatus(Status.AVAILABLE);
-    given(ipRangeRepository.findByStatus(Status.AVAILABLE))
-      .willReturn(List.of(ipRange));
+    Page<IPRange> ipRangePage = new PageImpl<>(List.of(ipRange));
+    when(ipRangeRepository.findByStatus(any(Status.class), any(PageRequest.class)))
+      .thenReturn(ipRangePage);
 
-    List<IPRangeDTO> result = ipRangeService.findAllAvailable();
+    PageResponse<IPRange> result = ipRangeService.findAllAvailable(0,10);
 
-    assertEquals(1, result.size());
-    assertEquals(ipRange.getStartAddress(), result.get(0).getStartAddress());
+    assertEquals(1, result.getTotalElements());
+
   }
 
-  @Test
-  void givenUserId_whenFindByUserId_thenReturnIPRangeDTOs() {
-    Long userId = 123L;
+   @Test
+    public void testFindByUserIdWhenUserNotFound() {
+        Long userId = 1L;
 
-    given(ipRangeRepository.findByUserId(userId)).willReturn(List.of(ipRange));
+        Mockito.when(userRepository.existsById(userId)).thenReturn(false);
 
-    List<IPRangeDTO> result = ipRangeService.findByUserId(userId);
+        assertThrows(NotFoundException.class, () -> ipRangeService.findByUserId(userId, 0, 10));
+    }
 
-    assertEquals(1, result.size());
-    assertEquals(ipRange.getStartAddress(), result.get(0).getStartAddress());
-  }
+    @Test
+    public void testFindByUserIdWhenUserFound() {
+        Mockito.when(userRepository.existsById(any(Long.class))).thenReturn(true);
 
-  //TODO: redo this test
+        List<IPRange> ipRangeList = new ArrayList<>();
+        Page<IPRange> page = new PageImpl<>(ipRangeList);
+
+        Mockito.when(ipRangeRepository.findByUserId(any(Long.class),any(PageRequest.class))).thenReturn(page);
+
+        PageResponse<IPRange> result = ipRangeService.findByUserId(1l,0,10);
+
+        assertNotNull(result);
+    }
+
   @Test
   void testAllocateValidIPRangeAndUser() {
     long ipRangeId = 1L;
@@ -163,7 +195,6 @@ class IPRangeServiceUnitTest {
     assertEquals(user, ipRange.getUser());
   }
 
-  //TODO: redo this test
   @Test
   void testAllocateInvalidIPRange() {
     Long ipRangeId = 1L;
@@ -181,7 +212,6 @@ class IPRangeServiceUnitTest {
     assertEquals("Invalid operation", result);
   }
 
-  //TODO: redo this test
   @Test
   void testAllocateInvalidUser() {
     Long ipRangeId = 1L;

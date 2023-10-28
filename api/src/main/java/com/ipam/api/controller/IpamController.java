@@ -1,22 +1,36 @@
 package com.ipam.api.controller;
 
+import com.ipam.api.dto.IPAddressForm;
 import com.ipam.api.dto.IPRangeDTO;
+import com.ipam.api.dto.IPRangeForm;
 import com.ipam.api.dto.MessageResponse;
-import com.ipam.api.dto.ReservationDTO;
+import com.ipam.api.dto.PageResponse;
 import com.ipam.api.dto.StatDTO;
 import com.ipam.api.dto.SubnetDTO;
+import com.ipam.api.dto.SubnetForm;
 import com.ipam.api.dto.UserDTO;
 import com.ipam.api.entity.IPAddress;
 import com.ipam.api.entity.IPRange;
 import com.ipam.api.entity.Reservation;
 import com.ipam.api.entity.Subnet;
+import com.ipam.api.entity.User;
 import com.ipam.api.service.IPAddressService;
 import com.ipam.api.service.IPRangeService;
 import com.ipam.api.service.ReservationService;
 import com.ipam.api.service.SubnetService;
 import com.ipam.api.service.UserService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import java.io.IOException;
-import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +40,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -48,14 +63,53 @@ public class IpamController {
   private UserService userService;
 
   @GetMapping("/users")
+  @Operation(
+    summary = "Get all users",
+    description = "Get all users",
+    tags = { "users" },
+    security = @SecurityRequirement(
+      name = "bearerAuth",
+      scopes = { "ROLE_ADMIN" }
+    ),
+    responses = {
+      @ApiResponse(
+        responseCode = "200",
+        description = "All users",
+        content = @Content(
+          mediaType = "application/json",
+          array = @ArraySchema(schema = @Schema(implementation = UserDTO.class))
+        )
+      ),
+      @ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized",
+        content = @Content(
+          extensions = {
+            @Extension(
+              name = "exception",
+              properties = {
+                @ExtensionProperty(
+                  name = "exception",
+                  value = "UnauthorizedException"
+                ),
+              }
+            ),
+          }
+        )
+      ),
+      @ApiResponse(responseCode = "403", description = "Forbidden"),
+    }
+  )
   @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
-  public List<UserDTO> getUsers() {
-    return userService.getAllUsers();
+  public PageResponse<User> getUsers(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+    return userService.getAllUsers(page, size);
   }
 
   @PostMapping("/ipaddresses")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
-  public ResponseEntity<IPAddress> addIpAddress(@RequestBody IPAddress body) {
+  public ResponseEntity<IPAddress> addIpAddress(
+    @RequestBody IPAddressForm body
+  ) {
     return ResponseEntity
       .status(HttpStatus.CREATED)
       .body(ipAddressService.save(body));
@@ -63,22 +117,32 @@ public class IpamController {
 
   @GetMapping("/ipaddresses")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
-  public List<IPAddress> getIpAddresses() {
-    return ipAddressService.findAll();
+  public PageResponse<IPAddress> getIpAddresses(
+    @RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "10") int size
+  ) {
+    return ipAddressService.findAll(page, size);
   }
 
   @GetMapping("/users/{userId}/ipaddresses")
-  @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
-  public List<IPAddress> getIpAddressesByUser(
-    @PathVariable("userId") Long userId
+  @PreAuthorize(
+    "hasAuthority('SCOPE_ROLE_USER') or hasAuthority('SCOPE_ROLE_ADMIN')"
+  )
+  public PageResponse<IPAddress> getIpAddressesByUser(
+    @PathVariable("userId") Long userId,
+    @RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "10") int size
   ) {
-    return ipAddressService.findByUserId(userId);
+    return ipAddressService.findByUserId(userId, page, size);
   }
 
   @GetMapping("/ipaddresses/available")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
-  public List<IPAddress> getAllAvailableIpAddresses() {
-    return ipAddressService.findAllAvailable();
+  public PageResponse<IPAddress> getAllAvailableIpAddresses(
+    @RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "10") int size
+  ) {
+    return ipAddressService.findAllAvailable(page, size);
   }
 
   @PostMapping("/allocate/ipaddresses/{ipAddressId}/users/{userId}")
@@ -95,24 +159,32 @@ public class IpamController {
   }
 
   @PostMapping("/ipaddresses/{ipAddressId}/dns")
-  public ResponseEntity<MessageResponse> assignDNS(@PathVariable("ipAddressId") long ipAddresId) throws IOException {
-    return ResponseEntity.ok().body(new MessageResponse(ipAddressService.assignDomainName(ipAddresId)));
+  public ResponseEntity<MessageResponse> assignDNS(
+    @PathVariable("ipAddressId") long ipAddresId
+  ) throws IOException {
+    return ResponseEntity
+      .ok()
+      .body(new MessageResponse(ipAddressService.assignDomainName(ipAddresId)));
   }
 
   @GetMapping("/ipranges/{ipRangeId}/ipaddresses")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
-  public List<IPAddress> getIpAddressesByIpRangeId(
-    @PathVariable("ipRangeId") Long ipRangeId
+  public PageResponse<IPAddress> getIpAddressesByIpRangeId(
+    @PathVariable("ipRangeId") Long ipRangeId,
+    @RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "10") int size
   ) {
-    return ipRangeService.findAllIpAddress(ipRangeId);
+    return ipRangeService.findAllIpAddress(ipRangeId, page, size);
   }
 
   @GetMapping("/ipranges/{ipRangeId}/ipaddresses/available")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
-  public List<IPAddress> getAvailableIpAddressesByIpRangeId(
-    @PathVariable("ipRangeId") Long ipRangeId
+  public PageResponse<IPAddress> getAvailableIpAddressesByIpRangeId(
+    @PathVariable("ipRangeId") Long ipRangeId,
+    @RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "10") int size
   ) {
-    return ipRangeService.findAllAvailableAddressesInRange(ipRangeId);
+    return ipRangeService.findAllAvailableAddressesInRange(ipRangeId, page, size);
   }
 
   @GetMapping("/admin/ip-scan")
@@ -124,7 +196,7 @@ public class IpamController {
   //ipranges routes
   @PostMapping("/ipranges")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
-  public ResponseEntity<IPRangeDTO> addIPRange(@RequestBody IPRange body) {
+  public ResponseEntity<IPRangeDTO> addIPRange(@RequestBody IPRangeForm body) {
     return ResponseEntity
       .status(HttpStatus.CREATED)
       .body(ipRangeService.save(body));
@@ -132,25 +204,25 @@ public class IpamController {
 
   @GetMapping("/ipranges")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
-  public List<IPRangeDTO> getAllIpRangeDTOs() {
-    return ipRangeService.findAll();
+  public PageResponse<IPRange> getAllIpRangeDTOs(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+    return ipRangeService.findAll(page, size);
   }
 
   @GetMapping("/ipranges/available")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
-  public List<IPRangeDTO> getAllAvailableIpRangeDTOs() {
-    return ipRangeService.findAllAvailable();
+  public PageResponse<IPRange> getAllAvailableIpRangeDTOs(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+    return ipRangeService.findAllAvailable(page,size);
   }
 
   @GetMapping("/users/{userId}/ipranges")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
-  public List<IPRangeDTO> getAllIpRangeDTOsByUserId(
-    @PathVariable("userId") Long userId
+  public PageResponse<IPRange> getAllIpRangeDTOsByUserId(
+    @PathVariable("userId") Long userId,
+    @RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "10") int size
   ) {
-    return ipRangeService.findByUserId(userId);
+    return ipRangeService.findByUserId(userId, page, size);
   }
-
-
 
   @PostMapping("/allocate/ipranges/{ipRangeId}/users/{userId}")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
@@ -172,7 +244,7 @@ public class IpamController {
   //subnets routes
   @PostMapping("/subnets")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
-  public ResponseEntity<SubnetDTO> addSubnet(@RequestBody Subnet body) {
+  public ResponseEntity<SubnetDTO> addSubnet(@RequestBody SubnetForm body) {
     return ResponseEntity
       .status(HttpStatus.CREATED)
       .body(subnetService.save(body));
@@ -180,22 +252,20 @@ public class IpamController {
 
   @GetMapping("/subnets")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
-  public List<SubnetDTO> getAllSubnetDTOs() {
-    return subnetService.findAll();
+  public PageResponse<Subnet> getAllSubnetDTOs(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+    return subnetService.findAll(page, size);
   }
 
   @GetMapping("/subnets/available")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
-  public List<SubnetDTO> getAllAvailableSubnetDTOs() {
-    return subnetService.findAllAvailable();
+  public PageResponse<Subnet> getAllAvailableSubnetDTOs(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+    return subnetService.findAllAvailable(page, size);
   }
 
   @GetMapping("/users/{userId}/subnets")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
-  public List<SubnetDTO> getAllSubnetDTOsByUserId(
-    @PathVariable("userId") Long userId
-  ) {
-    return subnetService.findByUserId(userId);
+  public PageResponse<Subnet> getAllSubnetDTOsByUserId(@PathVariable("userId") Long userId, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+    return subnetService.findByUserId(userId, page, size);
   }
 
   @PostMapping("/allocate/subnets/{subnetId}/users/{userId}")
@@ -226,10 +296,37 @@ public class IpamController {
       .ok()
       .body(new MessageResponse(reservationService.reserve(id, body)));
   }
-  
+
   @GetMapping("/reservations")
+  @Operation(summary = "all reservations", description = "gets all reservations", responses = {
+    @ApiResponse(
+      responseCode = "200",
+      description = "All reservations",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = PageResponse.class))
+    ),
+    @ApiResponse(
+      responseCode = "401",
+      description = "Unauthorized",
+      content = @Content(
+        extensions = {
+          @Extension(
+            name = "exception",
+            properties = {
+              @ExtensionProperty(
+                name = "exception",
+                value = "UnauthorizedException"
+              ),
+            }
+          ),
+        }
+      )
+    ),
+    @ApiResponse(responseCode = "403", description = "Forbidden"),
+  })
   @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
-  public List<ReservationDTO> adminReservationScan() {
-    return reservationService.findAll();
+  public PageResponse<Reservation> adminReservationScan(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+    return reservationService.findAll(page, size);
   }
 }

@@ -1,11 +1,17 @@
 package com.ipam.api.service;
 
+import com.ipam.api.controller.exception.AlreadyExistException;
+import com.ipam.api.controller.exception.InvalidException;
+import com.ipam.api.controller.exception.NotFoundException;
+import com.ipam.api.dto.IPAddressForm;
+import com.ipam.api.dto.PageResponse;
 import com.ipam.api.dto.StatDTO;
 import com.ipam.api.entity.IPAddress;
 import com.ipam.api.entity.Status;
 import com.ipam.api.entity.User;
 import com.ipam.api.repository.IPAddressRepository;
 import com.ipam.api.repository.UserRepository;
+import com.ipam.api.util.NetworkUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -16,6 +22,9 @@ import java.util.Random;
 import java.util.Scanner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -29,25 +38,44 @@ public class IPAddressService {
 
   @Autowired
   private ResourceLoader resourceLoader;
-  
+
+  @Autowired
+  private NetworkUtil networkUtil;
+
   private Random random = new Random();
 
-  public IPAddress save(IPAddress body) {
+  public IPAddress save(IPAddressForm body) {
     IPAddress ipAddress = new IPAddress();
+    if (
+      body.getAddress() == null ||
+      body.getAddress().isEmpty() ||
+      !networkUtil.isValidIp(body.getAddress())
+    ) {
+      throw new InvalidException("Invalid IP Address");
+    }
+    if (ipAddressRepository.existsByAddress(body.getAddress())) {
+      throw new AlreadyExistException("IP Address already exists");
+    }
     ipAddress.setAddress(body.getAddress());
     return ipAddressRepository.save(ipAddress);
   }
 
-  public List<IPAddress> findAll() {
-    return ipAddressRepository.findAll();
+  public PageResponse<IPAddress> findAll(int pageNumber, int pageSize) {
+    return convertToPageResponse(
+      ipAddressRepository.findAll(PageRequest.of(pageNumber, pageSize))
+    );
   }
 
-  public List<IPAddress> findByUserId(Long userId) {
-    return ipAddressRepository.findByUserId(userId);
+  public PageResponse<IPAddress> findByUserId(Long userId, int page, int size) {
+    if (!userRepository.existsById(userId)) {
+      throw new NotFoundException("user not found");
+    }
+    Pageable p = PageRequest.of(page, size);
+    return convertToPageResponse(ipAddressRepository.findByUserId(userId, p));
   }
 
-  public List<IPAddress> findAllAvailable() {
-    return ipAddressRepository.findByStatus(Status.AVAILABLE);
+  public PageResponse<IPAddress> findAllAvailable(int page, int size) {
+    return convertToPageResponse(ipAddressRepository.findByStatus(Status.AVAILABLE, PageRequest.of(page, size)));
   }
 
   public String allocate(Long ipAddressId, Long userId) {
@@ -105,5 +133,18 @@ public class IPAddressService {
     stat.setInuseCount(ipAddressRepository.countByStatus(Status.IN_USE));
     stat.setReservedCount(ipAddressRepository.countByStatus(Status.RESERVED));
     return stat;
+  }
+
+  private PageResponse<IPAddress> convertToPageResponse(Page<IPAddress> page) {
+    PageResponse<IPAddress> response = new PageResponse<>();
+    response.setTotalPages(page.getTotalPages());
+    response.setCurrentPage(page.getNumber());
+    response.setHasNext(page.hasNext());
+    response.setHasPrevious(page.hasPrevious());
+    response.setData(page.getContent());
+    response.setTotalElements(page.getTotalElements());
+    response.setMaxPageSize(page.getSize());
+    response.setCurrentPageSize(page.getNumberOfElements());
+    return response;
   }
 }

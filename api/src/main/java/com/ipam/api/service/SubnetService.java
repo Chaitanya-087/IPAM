@@ -1,7 +1,11 @@
 package com.ipam.api.service;
 
+import com.ipam.api.controller.exception.AlreadyExistException;
+import com.ipam.api.controller.exception.InvalidException;
+import com.ipam.api.dto.PageResponse;
 import com.ipam.api.dto.StatDTO;
 import com.ipam.api.dto.SubnetDTO;
+import com.ipam.api.dto.SubnetForm;
 import com.ipam.api.entity.IPAddress;
 import com.ipam.api.entity.Status;
 import com.ipam.api.entity.Subnet;
@@ -9,10 +13,14 @@ import com.ipam.api.entity.User;
 import com.ipam.api.repository.SubnetRepository;
 import com.ipam.api.repository.UserRepository;
 import com.ipam.api.util.NetworkUtil;
+
 import java.time.LocalDateTime;
-import java.util.List;
+
 import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,12 +35,21 @@ public class SubnetService {
   @Autowired
   private NetworkUtil networkUtil;
 
-  public SubnetDTO save(Subnet body) {
+  public SubnetDTO save(SubnetForm body) {
     Subnet subnet = new Subnet();
     subnet.setName(body.getName());
     subnet.setCidr(body.getCidr());
     subnet.setMask(body.getMask());
     subnet.setGateway(body.getGateway());
+
+    if (!networkUtil.isValidCidr(body.getCidr())) {
+      throw new InvalidException("Invalid CIDR");
+    }
+
+    if (subnetRepository.existsByCidr(body.getCidr())) {
+      throw new AlreadyExistException("Subnet already exists");
+    }
+
     String[] parts = body.getCidr().split("/");
     long start = networkUtil.ipToLong(parts[0]);
     int mask = Integer.parseInt(parts[1]);
@@ -46,24 +63,19 @@ public class SubnetService {
     return convertToDto(subnetRepository.save(subnet));
   }
 
-  public List<SubnetDTO> findAll() {
-    return subnetRepository.findAll().stream().map(this::convertToDto).toList();
+  public PageResponse<Subnet> findAll(int page, int size) {
+    return convertToPageResponse(subnetRepository.findAll(PageRequest.of(page,size)));
   }
 
-  public List<SubnetDTO> findByUserId(Long userId) {
-    return subnetRepository
-      .findByUserId(userId)
-      .stream()
-      .map(this::convertToDto)
-      .toList();
+  public PageResponse<Subnet> findByUserId(Long userId, int page, int size) {
+    if (!userRepository.existsById(userId)) {
+      throw new InvalidException("user not found");
+    }
+    return convertToPageResponse(subnetRepository.findByUserId(userId, PageRequest.of(page,size)));
   }
 
-  public List<SubnetDTO> findAllAvailable() {
-    return subnetRepository
-      .findByStatus(Status.AVAILABLE)
-      .stream()
-      .map(this::convertToDto)
-      .toList();
+  public  PageResponse<Subnet> findAllAvailable(int page, int size) {
+    return convertToPageResponse(subnetRepository.findByStatus(Status.AVAILABLE, PageRequest.of(page, size)));
   }
 
   public String allocate(Long ipAddressId, Long userId) {
@@ -115,5 +127,19 @@ public class SubnetService {
     subnetDTO.setGateway(subnet.getGateway());
     subnetDTO.setSize((long) subnet.getIpAddresses().size());
     return subnetDTO;
+  }
+
+
+    private PageResponse<Subnet> convertToPageResponse(Page<Subnet> page) {
+    PageResponse<Subnet> response = new PageResponse<>();
+    response.setTotalPages(page.getTotalPages());
+    response.setCurrentPage(page.getNumber());
+    response.setHasNext(page.hasNext());
+    response.setHasPrevious(page.hasPrevious());
+    response.setData(page.getContent().stream().map(this::convertToDto).toList());
+    response.setTotalElements(page.getTotalElements());
+    response.setMaxPageSize(page.getSize());
+    response.setCurrentPageSize(page.getNumberOfElements());
+    return response;
   }
 }

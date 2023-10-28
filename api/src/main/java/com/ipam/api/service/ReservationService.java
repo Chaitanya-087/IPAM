@@ -1,5 +1,6 @@
 package com.ipam.api.service;
 
+import com.ipam.api.dto.PageResponse;
 import com.ipam.api.dto.ReservationDTO;
 import com.ipam.api.entity.IPAddress;
 import com.ipam.api.entity.IPRange;
@@ -10,9 +11,10 @@ import com.ipam.api.entity.Subnet;
 import com.ipam.api.repository.NetworkObjectRepository;
 import com.ipam.api.repository.ReservationRepository;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -90,13 +92,22 @@ public class ReservationService {
     }
   }
 
-  public List<ReservationDTO> findAll() {
-    return reservationRepository
-      .findAll()
-      .stream()
-      .map(this::convertToDto)
-      .toList();
+  public PageResponse<Reservation> findAll(int page, int size) {
+    return convertToPageResponse(reservationRepository.findAll(PageRequest.of(page,size)));
   }
+
+  private PageResponse<Reservation> convertToPageResponse(Page<Reservation> page) {
+  PageResponse<Reservation> response = new PageResponse<>();
+  response.setTotalPages(page.getTotalPages());
+  response.setCurrentPage(page.getNumber());
+  response.setHasNext(page.hasNext());
+  response.setHasPrevious(page.hasPrevious());
+  response.setData(page.getContent().stream().map(this::convertToDto).toList());
+  response.setTotalElements(page.getTotalElements());
+  response.setMaxPageSize(page.getSize());
+  response.setCurrentPageSize(page.getNumberOfElements());
+  return response;
+}
 
   private ReservationDTO convertToDto(Reservation reservation) {
     ReservationDTO reservationDTO = new ReservationDTO();

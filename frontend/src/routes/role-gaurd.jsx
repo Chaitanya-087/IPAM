@@ -12,10 +12,10 @@ const RoleGuard = ({componentName}) => {
         async (name) => {
             let importedComponent;
             if (role === "ROLE_ADMIN") {
-                const adminModule = await import(`./admin/${name}` /* @vite-ignore */);
+                const adminModule = await import(`./admin/pages/${name}` /* @vite-ignore */);
                 importedComponent = adminModule.default;
             } else {
-                const userModule = await import(`./user/${name}` /* @vite-ignore */);
+                const userModule = await import(`./user/pages/${name}` /* @vite-ignore */);
                 importedComponent = userModule.default;
             }
             setComponent(() => importedComponent);

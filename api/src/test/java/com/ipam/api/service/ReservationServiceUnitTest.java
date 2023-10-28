@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
 
-import com.ipam.api.dto.ReservationDTO;
+import com.ipam.api.dto.PageResponse;
 import com.ipam.api.entity.IPAddress;
 import com.ipam.api.entity.IPRange;
 import com.ipam.api.entity.Reservation;
@@ -20,6 +20,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 @ExtendWith(MockitoExtension.class)
 class ReservationServiceUnitTest {
@@ -216,11 +219,13 @@ class ReservationServiceUnitTest {
     reservation3.setReleaseDate(LocalDateTime.now().plusHours(1));
     reservation3.setNetworkObject(subnet);
 
-    given(reservationRepository.findAll())
-      .willReturn(List.of(reservation, reservation2, reservation3));
+    Page<Reservation> page = new PageImpl<>(List.of(reservation, reservation2, reservation3));
 
-    List<ReservationDTO> reservations = reservationService.findAll();
+    given(reservationRepository.findAll(PageRequest.of(0, 10)))
+      .willReturn(page);
 
-    assertEquals(3, reservations.size());
+    PageResponse<Reservation> reservations = reservationService.findAll(0,10);
+
+    assertEquals(3, reservations.getTotalElements());
   }
 }

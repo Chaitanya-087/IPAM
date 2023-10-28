@@ -1,14 +1,21 @@
 package com.ipam.api.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.ipam.api.controller.exception.AlreadyExistException;
+import com.ipam.api.controller.exception.InvalidException;
+import com.ipam.api.dto.PageResponse;
 import com.ipam.api.dto.StatDTO;
 import com.ipam.api.dto.SubnetDTO;
+import com.ipam.api.dto.SubnetForm;
 import com.ipam.api.entity.IPAddress;
 import com.ipam.api.entity.Status;
 import com.ipam.api.entity.Subnet;
@@ -27,6 +34,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 @ExtendWith(MockitoExtension.class)
 class SubnetServiceUnitTest {
@@ -62,72 +72,96 @@ class SubnetServiceUnitTest {
   }
 
   @Test
+  void testSaveExistingSubnet() {
+    SubnetForm inputSubnet = new SubnetForm();
+    inputSubnet.setName("Test Subnet");
+    inputSubnet.setCidr("192.168.1.0/24");
+    inputSubnet.setMask("255.255.255.0");
+    inputSubnet.setGateway("192.168.1.1");
+
+    when(networkUtil.isValidCidr("192.168.1.0/24")).thenReturn(true);
+    when(subnetRepository.existsByCidr(anyString())).thenReturn(true);
+    assertThrowsExactly(AlreadyExistException.class, () -> subnetService.save(inputSubnet));
+  }
+
+  @Test
+  void testSaveInvalidSubnet() {
+    SubnetForm inputSubnet = new SubnetForm();
+    inputSubnet.setName("Test Subnet");
+    inputSubnet.setCidr("invalid_cidr");
+
+    when(networkUtil.isValidCidr("invalid_cidr")).thenReturn(false);
+
+    assertThrowsExactly(InvalidException.class, () -> subnetService.save(inputSubnet));
+  }
+
+  @Test
   void givenSubnetRequest_whenSaved_thenReturnSubnetDTO() {
-    Subnet inputSubnet = new Subnet();
+    SubnetForm inputSubnet = new SubnetForm();
     inputSubnet.setName("Test Subnet");
     inputSubnet.setCidr("192.168.1.0/24");
     inputSubnet.setMask("255.255.255.0");
     inputSubnet.setGateway("192.168.1.1");
     when(networkUtil.ipToLong("192.168.1.0")).thenReturn(3232235776L);
-
+    when(subnetRepository.existsByCidr(anyString())).thenReturn(false);
+    when(networkUtil.isValidCidr(anyString())).thenReturn(true);
     List<IPAddress> mockIpAddresses = new ArrayList<>();
-    int size = (1 << (32 - 24)); // Calculate the number of IP addresses in the subnet
+    int size = (1 << (32 - 24));
     for (int i = 1; i < size - 1; i++) {
       IPAddress ipAddress = new IPAddress();
       when(networkUtil.longToIp(any(Long.class))).thenReturn("mockIPAddress");
       mockIpAddresses.add(ipAddress);
     }
-    // Mock the behavior of subnetRepository
     subnet.setIpAddresses(mockIpAddresses);
     Subnet savedSubnet = new Subnet();
     savedSubnet.setId(1L);
 
     when(subnetRepository.save(Mockito.any(Subnet.class))).thenReturn(subnet);
 
-    // Call the save method
     SubnetDTO result = subnetService.save(inputSubnet);
 
-    // Verify the result
     assertEquals("Test Subnet", result.getName());
     assertEquals("192.168.1.0/24", result.getCidr());
 
-    // Verify the number of IP addresses in the subnet
     int expectedIpAddressCount = (1 << (32 - 24)) - 2; // Subtract 2 for network address and broadcast address
     assertEquals(expectedIpAddressCount, result.getSize().intValue());
   }
 
   @Test
   void givenSubnets_whenFindAll_thenReturnSubnetDTOs() {
-    given(subnetRepository.findAll()).willReturn(List.of(subnet));
+    Page<Subnet> page = new PageImpl<>(List.of(subnet));
+    given(subnetRepository.findAll(any(PageRequest.class))).willReturn(page);
 
-    List<SubnetDTO> result = subnetService.findAll();
+    PageResponse<Subnet> result = subnetService.findAll(0,10);
 
-    assertEquals(1, result.size());
-    assertEquals(subnet.getName(), result.get(0).getName());
+    assertEquals(1, result.getTotalElements());
   }
 
   @Test
   void givenUserId_whenFindByUserId_thenReturnSubnetDTOs() {
-    Long userId = 123L;
+    Page<Subnet> page = new PageImpl<>(List.of(subnet));
+    when(subnetRepository.findByUserId(anyLong(), any(PageRequest.class))).thenReturn(page);
+    when(userRepository.existsById(anyLong())).thenReturn(true);
+    PageResponse<Subnet> result = subnetService.findByUserId(1l,0,10);
 
-    given(subnetRepository.findByUserId(userId)).willReturn(List.of(subnet));
+    assertEquals(1, result.getTotalElements());
+  }
 
-    List<SubnetDTO> result = subnetService.findByUserId(userId);
+  @Test
+  void givenInvalidUserId_whenFindByUserId_thenThrowNotFoundException() {
+    when(userRepository.existsById(any(Long.class))).thenReturn(false);
 
-    assertEquals(1, result.size());
-    assertEquals(subnet.getName(), result.get(0).getName());
+    assertThrowsExactly(InvalidException.class, () -> subnetService.findByUserId(1l,0,10));
   }
 
   @Test
   void givenAvailableSubnets_whenFindAllAvailable_thenReturnAvailableSubnetDTOs() {
     subnet.setStatus(Status.AVAILABLE);
-    given(subnetRepository.findByStatus(Status.AVAILABLE))
-      .willReturn(List.of(subnet));
-
-    List<SubnetDTO> result = subnetService.findAllAvailable();
-
-    assertEquals(1, result.size());
-    assertEquals(subnet.getName(), result.get(0).getName());
+    Page<Subnet> page = new PageImpl<>(List.of(subnet));
+    when(subnetRepository.findByStatus(any(Status.class), any(PageRequest.class)))
+      .thenReturn(page);  
+    PageResponse<Subnet> result = subnetService.findAllAvailable(0,10);
+    assertEquals(1, result.getTotalElements());
   }
 
   @Test

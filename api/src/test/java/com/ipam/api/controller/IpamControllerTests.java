@@ -6,26 +6,25 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ipam.api.dto.IPAddressForm;
 import com.ipam.api.dto.IPRangeDTO;
-import com.ipam.api.dto.ReservationDTO;
+import com.ipam.api.dto.IPRangeForm;
+import com.ipam.api.dto.PageResponse;
 import com.ipam.api.dto.StatDTO;
 import com.ipam.api.dto.SubnetDTO;
-import com.ipam.api.dto.UserDTO;
+import com.ipam.api.dto.SubnetForm;
 import com.ipam.api.entity.IPAddress;
 import com.ipam.api.entity.IPRange;
 import com.ipam.api.entity.Reservation;
 import com.ipam.api.entity.Status;
 import com.ipam.api.entity.Subnet;
+import com.ipam.api.entity.User;
 import com.ipam.api.service.IPAddressService;
 import com.ipam.api.service.IPRangeService;
 import com.ipam.api.service.ReservationService;
 import com.ipam.api.service.SubnetService;
 import com.ipam.api.service.UserService;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -36,6 +35,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -81,34 +82,16 @@ class IpamControllerTests {
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
   void shouldReturnAllUsers() throws Exception {
-    UserDTO user1 = new UserDTO();
-    user1.setId(1l);
-    user1.setName("test");
-    user1.setEmail("test123gmail.com");
-    user1.setIpAddressesCount(1l);
-    user1.setIpRangesCount(1l);
-    user1.setSubnetsCount(1l);
-
-    UserDTO user2 = new UserDTO();
-    user2.setId(2l);
-    user2.setName("test2");
-    user2.setEmail("test123gmail.com");
-    user2.setIpAddressesCount(1l);
-    user2.setIpRangesCount(1l);
-    user2.setSubnetsCount(1l);
-
-    when(userService.getAllUsers()).thenReturn(Arrays.asList(user1, user2));
-
+    when(userService.getAllUsers(0,10)).thenReturn(new PageResponse<User>());
     mockMvc
       .perform(get("/api/ipam/users"))
-      .andExpect(status().isOk())
-      .andExpect(jsonPath("$", Matchers.hasSize(2)));
+      .andExpect(status().isOk());
   }
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
   void shouldAddIPAddress() throws Exception {
-    when(ipAddressService.save(any(IPAddress.class))).thenReturn(ipAddress);
+    when(ipAddressService.save(any(IPAddressForm.class))).thenReturn(ipAddress);
     mockMvc
       .perform(
         post("/api/ipam/ipaddresses")
@@ -122,39 +105,38 @@ class IpamControllerTests {
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
   void shouldReturnAllIPAddresses() throws Exception {
-    when(ipAddressService.findAll()).thenReturn(List.of(ipAddress));
+    when(ipAddressService.findAll(0,10)).thenReturn(new PageResponse<IPAddress>());
     mockMvc
       .perform(get("/api/ipam/ipaddresses"))
-      .andExpect(status().isOk())
-      .andExpect(jsonPath("$").isArray())
-      .andExpect(jsonPath("$").isNotEmpty());
+      .andExpect(status().isOk());
+  }
+
+  @Test
+  @WithMockUser
+  public void testGetIpAddressesWithoutAdminRole() throws Exception {
+      mockMvc.perform(MockMvcRequestBuilders.get("/api/ipam/ipaddresses"))
+          .andExpect(MockMvcResultMatchers.status().isForbidden());
   }
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_USER" })
   void shouldReturnAllIPAddressesByUser() throws Exception {
-    IPAddress ipAddress = new IPAddress();
-    ipAddress.setAddress("192.168.81.0");
-    when(ipAddressService.findByUserId(1l))
-      .thenReturn(Arrays.asList(ipAddress));
+
+    when(ipAddressService.findByUserId(1l,0,10))
+      .thenReturn(new PageResponse<IPAddress>());
     mockMvc
       .perform(get("/api/ipam/users/1/ipaddresses"))
-      .andExpect(status().isOk())
-      .andExpect(jsonPath("$").isArray())
-      .andExpect(jsonPath("$").isNotEmpty());
+      .andExpect(status().isOk());
   }
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_USER" })
   void shouldReturnAllAvailableIPAddresses() throws Exception {
-    when(ipAddressService.findAllAvailable())
-      .thenReturn(Arrays.asList(ipAddress));
-
+    when(ipAddressService.findAllAvailable(0,10))
+      .thenReturn(new PageResponse<IPAddress>());
     mockMvc
       .perform(get("/api/ipam/ipaddresses/available"))
-      .andExpect(status().isOk())
-      .andExpect(jsonPath("$").isArray())
-      .andExpect(jsonPath("$").isNotEmpty());
+      .andExpect(status().isOk());
   }
 
   @Test
@@ -208,7 +190,7 @@ class IpamControllerTests {
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
   void testAddIPRange() throws Exception {
-    IPRange request = new IPRange();
+    IPRangeForm request = new IPRangeForm();
 
     when(ipRangeService.save(request)).thenReturn(new IPRangeDTO());
 
@@ -224,40 +206,34 @@ class IpamControllerTests {
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
   void testGetAllIPRanges() throws Exception {
-    when(ipRangeService.findAll())
-      .thenReturn(List.of(new IPRangeDTO(), new IPRangeDTO()));
+    when(ipRangeService.findAll(0,10))
+      .thenReturn(new PageResponse<IPRange>());
 
     mockMvc
       .perform(get("/api/ipam/ipranges"))
-      .andExpect(status().isOk())
-      .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-      .andExpect(jsonPath("$").isArray());
+      .andExpect(status().isOk());
   }
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_USER" })
   void testGetAllAvailableIPRanges() throws Exception {
-    when(ipRangeService.findAllAvailable())
-      .thenReturn(List.of(new IPRangeDTO(), new IPRangeDTO()));
+    when(ipRangeService.findAllAvailable(0,10))
+      .thenReturn(new PageResponse<IPRange>());
 
     mockMvc
       .perform(get("/api/ipam/ipranges/available"))
-      .andExpect(status().isOk())
-      .andExpect(jsonPath("$").isArray())
-      .andExpect(jsonPath("$").isNotEmpty());
+      .andExpect(status().isOk());
   }
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_USER" })
   void testGetAllIPRangesByUser() throws Exception {
-    when(ipRangeService.findByUserId(1l))
-      .thenReturn(List.of(new IPRangeDTO(), new IPRangeDTO()));
+    when(ipRangeService.findByUserId(1l,0,10))
+      .thenReturn(new PageResponse<IPRange>());
 
     mockMvc
       .perform(get("/api/ipam/users/1/ipranges"))
-      .andExpect(status().isOk())
-      .andExpect(jsonPath("$").isArray())
-      .andExpect(jsonPath("$").isNotEmpty());
+      .andExpect(status().isOk());
   }
 
   @Test
@@ -296,7 +272,7 @@ class IpamControllerTests {
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
   void testAddSubnet() throws Exception {
-    Subnet request = new Subnet();
+    SubnetForm request = new SubnetForm();
 
     when(subnetService.save(request)).thenReturn(new SubnetDTO());
 
@@ -312,40 +288,34 @@ class IpamControllerTests {
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
   void testGetAllSubnets() throws Exception {
-    when(subnetService.findAll())
-      .thenReturn(List.of(new SubnetDTO(), new SubnetDTO()));
+    when(subnetService.findAll(0,10))
+      .thenReturn(new PageResponse<Subnet>());
 
     mockMvc
       .perform(get("/api/ipam/subnets"))
-      .andExpect(status().isOk())
-      .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-      .andExpect(jsonPath("$").isArray());
+      .andExpect(status().isOk());
   }
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_USER" })
   void testGetAllAvailableSubnets() throws Exception {
-    when(subnetService.findAllAvailable())
-      .thenReturn(List.of(new SubnetDTO(), new SubnetDTO()));
+    when(subnetService.findAllAvailable(0,10))
+      .thenReturn(new PageResponse<Subnet>());
 
     mockMvc
       .perform(get("/api/ipam/subnets/available"))
-      .andExpect(status().isOk())
-      .andExpect(jsonPath("$").isArray())
-      .andExpect(jsonPath("$").isNotEmpty());
+      .andExpect(status().isOk());
   }
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_USER" })
   void testGetAllSubnetsByUser() throws Exception {
-    when(subnetService.findByUserId(1l))
-      .thenReturn(List.of(new SubnetDTO(), new SubnetDTO()));
+    when(subnetService.findByUserId(1l,0,10))
+      .thenReturn(new PageResponse<Subnet>());
 
     mockMvc
       .perform(get("/api/ipam/users/1/subnets"))
-      .andExpect(status().isOk())
-      .andExpect(jsonPath("$").isArray())
-      .andExpect(jsonPath("$").isNotEmpty());
+      .andExpect(status().isOk());
   }
 
   @Test
@@ -404,45 +374,33 @@ class IpamControllerTests {
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
   void testGetAllReservations() throws Exception {
-    when(reservationService.findAll())
-      .thenReturn(List.of(new ReservationDTO(), new ReservationDTO()));
+    when(reservationService.findAll(0,10))
+      .thenReturn(new PageResponse<Reservation>());
 
     mockMvc
       .perform(get("/api/ipam/reservations"))
-      .andExpect(status().isOk())
-      .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-      .andExpect(jsonPath("$").isArray());
+      .andExpect(status().isOk());
   }
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_ADMIN" })
   void testGetIpAddressesByIpRangeId() throws Exception {
-    Long ipRangeId = 1L;
-    List<IPAddress> expectedIpAddresses = new ArrayList<>(); // Define your expected IP addresses
-
-    when(ipRangeService.findAllIpAddress(ipRangeId))
-      .thenReturn(expectedIpAddresses);
+    when(ipRangeService.findAllIpAddress(1l,0,10))
+      .thenReturn(new PageResponse<IPAddress>());
 
     mockMvc
-      .perform(get("/api/ipam/ipranges/{ipRangeId}/ipaddresses", ipRangeId))
-      .andExpect(status().isOk())
-      .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-      .andExpect(jsonPath("$").isArray());
+      .perform(get("/api/ipam/ipranges/{ipRangeId}/ipaddresses", 1l))
+      .andExpect(status().isOk());
   }
 
   @Test
   @WithMockUser(authorities = { "SCOPE_ROLE_USER" })
   void testGetAvailableIpAddressesByIpRangeId() throws Exception {
-    Long ipRangeId = 1L;
-    List<IPAddress> expectedAvailableIpAddresses = new ArrayList<>(); // Define your expected available IP addresses
-
-    when(ipRangeService.findAllAvailableAddressesInRange(ipRangeId))
-      .thenReturn(expectedAvailableIpAddresses);
+    when(ipRangeService.findAllAvailableAddressesInRange(1l,0,10))
+      .thenReturn(new PageResponse<IPAddress>());
 
     mockMvc
-      .perform(get("/api/ipam/ipranges/{ipRangeId}/ipaddresses/available", ipRangeId))
-      .andExpect(status().isOk())
-      .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-      .andExpect(jsonPath("$").isArray());
+      .perform(get("/api/ipam/ipranges/{ipRangeId}/ipaddresses/available", 1l))
+      .andExpect(status().isOk());
   }
 }

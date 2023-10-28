@@ -2,7 +2,7 @@ import {Divider, Typography} from "@mui/material";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
-import "./stats.styles.css";
+import "../../styles/stats.css"
 
 const Stats = ({stats}) => {
     return (

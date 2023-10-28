@@ -1,6 +1,8 @@
 package com.ipam.api.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -8,12 +10,19 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.ipam.api.controller.exception.AlreadyExistException;
+import com.ipam.api.controller.exception.InvalidException;
+import com.ipam.api.controller.exception.NotFoundException;
+import com.ipam.api.dto.IPAddressForm;
+import com.ipam.api.dto.PageResponse;
 import com.ipam.api.dto.StatDTO;
 import com.ipam.api.entity.IPAddress;
 import com.ipam.api.entity.Status;
 import com.ipam.api.entity.User;
 import com.ipam.api.repository.IPAddressRepository;
 import com.ipam.api.repository.UserRepository;
+import com.ipam.api.util.NetworkUtil;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,6 +40,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 @ExtendWith(MockitoExtension.class)
 @TestInstance(Lifecycle.PER_CLASS)
@@ -53,6 +65,9 @@ class IPAddressServiceUnitTest {
   @Mock
   private UserRepository userRepository;
 
+  @Mock
+  private NetworkUtil networkUtil;
+
   @BeforeAll
   public void setUp() {
     ipAddress = new IPAddress();
@@ -63,38 +78,71 @@ class IPAddressServiceUnitTest {
     ipAddress.setUpdatedAt(LocalDateTime.now());
     ipAddress.setExpiration(null);
     ipAddress.setDns(null);
-    ipAddress.setAddress("192.78.9.1");
+    ipAddress.setAddress("192.168.1.1");
   }
 
-  @Test
-  void givenIpAddress_whenSaved_thenReturnIpAddress() {
-    given(ipAddressRepository.save(any(IPAddress.class))).willReturn(ipAddress);
+   @Test
+    public void testSaveWithValidInput() {
+        IPAddressForm body = new IPAddressForm();
+        body.setAddress("192.168.1.1");
 
-    IPAddress result = ipAddressService.save(ipAddress);
+        when(ipAddressRepository.existsByAddress("192.168.1.1")).thenReturn(false);
+        when(networkUtil.isValidIp(any(String.class))).thenReturn(true);
+        when(ipAddressRepository.save(any(IPAddress.class))).thenReturn(ipAddress);
+        // Call the save method
+        IPAddress result = ipAddressService.save(body);
 
-    assertEquals(ipAddress.getAddress(), result.getAddress());
-  }
+        // Verify that the result is not null and other assertions based on your code
+        assertNotNull(result);
+        assertEquals("192.168.1.1", result.getAddress());
+    }
+
+    @Test
+    public void testSaveWithInvalidInput() {
+        IPAddressForm body = new IPAddressForm();
+        body.setAddress("invalid_address");
+        assertThrows(InvalidException.class, () -> ipAddressService.save(body));
+    }
+
+    @Test
+    public void testSaveWithExistingIP() {
+        IPAddressForm body = new IPAddressForm();
+        body.setAddress("192.168.1.1");
+
+        when(ipAddressRepository.existsByAddress("192.168.1.1")).thenReturn(true);
+        when(networkUtil.isValidIp(any(String.class))).thenReturn(true);
+        // Call the save method, which should throw an exception
+        assertThrows(AlreadyExistException.class, () -> ipAddressService.save(body));
+    }
 
   @Test
   void givenIpAddresses_whenFindAll_thenReturnIpAddresses() {
-    given(ipAddressRepository.findAll()).willReturn(List.of(ipAddress));
 
-    List<IPAddress> ipAddresses = ipAddressService.findAll();
+    Page<IPAddress> page = new PageImpl<>(List.of(ipAddress));
+    given(ipAddressRepository.findAll(any(PageRequest.class))).willReturn(page);
 
-    assertEquals(1, ipAddresses.size());
+    PageResponse<IPAddress> ipAddresses = ipAddressService.findAll(0,10);
+
+    assertEquals(1, ipAddresses.getTotalElements());
   }
 
   @Test
-  void givenUserId_whenFindByUserId_thenReturnIpAddresses() {
-    Long userId = 123L;
+  void testFindByValidUserId() {
+    Page<IPAddress> page = new PageImpl<>(List.of(ipAddress));
+    when(ipAddressRepository.findByUserId(anyLong(), any(PageRequest.class)))
+      .thenReturn(page);
+    when(userRepository.existsById(anyLong())).thenReturn(true);
+    PageResponse<IPAddress> ipAddresses = ipAddressService.findByUserId(1l,0,10);
 
-    given(ipAddressRepository.findByUserId(userId))
-      .willReturn(List.of(ipAddress));
+    assertEquals(1, ipAddresses.getTotalElements());
+  }
 
-    List<IPAddress> ipAddresses = ipAddressService.findByUserId(userId);
+  @Test
+  void testFindByInvalidUserId() {
+    when(userRepository.existsById(any(Long.class))).thenReturn(false);
 
-    assertEquals(1, ipAddresses.size());
-    assertEquals(ipAddresses.get(0).getAddress(), ipAddress.getAddress());
+    assertThrows(NotFoundException.class, () -> ipAddressService.findByUserId(1l,0,10));
+
   }
 
   @Test
@@ -125,13 +173,11 @@ class IPAddressServiceUnitTest {
   @Test
   void givenAvailableIPAddresses_whenFindAllAvailable_thenReturnAvailableIPAddresses() {
     ipAddress.setStatus(Status.AVAILABLE);
-    given(ipAddressRepository.findByStatus(Status.AVAILABLE))
-      .willReturn(List.of(ipAddress));
-
-    List<IPAddress> result = ipAddressService.findAllAvailable();
-
-    assertEquals(1, result.size());
-    assertEquals(ipAddress.getAddress(), result.get(0).getAddress());
+    Page<IPAddress> page = new PageImpl<>(List.of(ipAddress));
+    when(ipAddressRepository.findByStatus(any(Status.class), any(PageRequest.class)))
+      .thenReturn(page);
+    PageResponse<IPAddress> ipaddresses = ipAddressService.findAllAvailable(0,10);
+    assertEquals(1, ipaddresses.getTotalElements());
   }
 
   @Test

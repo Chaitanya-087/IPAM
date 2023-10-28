@@ -1,4 +1,3 @@
-import {useState} from "react";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -9,19 +8,8 @@ import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import {Typography} from "@mui/material";
 
-function DataTable({columns, rows}) {
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-
-    const handleChangePage = (event, newPage) => {
-        setPage(newPage);
-    };
-
-    const handleChangeRowsPerPage = (event) => {
-        setRowsPerPage(+event.target.value);
-        setPage(0);
-    };
-
+function DataTable(props) {
+    const {columns, rows, count, page, rowsPerPage ,onPageChange, onRowsPerPageChange} = props;
     return (
         <Paper
             sx={{
@@ -37,7 +25,7 @@ function DataTable({columns, rows}) {
                     <TableHead>
                         <TableRow>
                             {columns.map((column) => (
-                                <TableCell key={column.id} align={column.align} style={{minWidth: column.minWidth}}>
+                                <TableCell key={column.label} align={column.align} style={{minWidth: column.minWidth}}>
                                     <Typography paragraph fontWeight='700' fontSize='16px' m='0'>
                                         {column.label}
                                     </Typography>
@@ -46,14 +34,14 @@ function DataTable({columns, rows}) {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
+                        {rows.map((row) => {
                             return (
                                 <TableRow hover role='checkbox' tabIndex={-1} key={row.id}>
                                     {columns.map((column) => {
                                         const value = row[column.id];
                                         return (
-                                            <TableCell key={column.id} align={column.align}>
-                                                {column.format ? column.format(value) : value}
+                                            <TableCell key={column.label} align={column.align}>
+                                                <column.component value={value} id = {row.id}/>
                                             </TableCell>
                                         );
                                     })}
@@ -66,11 +54,11 @@ function DataTable({columns, rows}) {
             <TablePagination
                 rowsPerPageOptions={[10, 25, 100]}
                 component='div'
-                count={rows.length}
+                count={count}
                 rowsPerPage={rowsPerPage}
                 page={page}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
+                onPageChange={onPageChange}
+                onRowsPerPageChange={onRowsPerPageChange}
             />
         </Paper>
     );

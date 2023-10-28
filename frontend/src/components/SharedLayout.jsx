@@ -64,7 +64,7 @@ const SharedLayout = () => {
     return (
         <Box sx={{display: "flex"}}>
             <TabletBox>
-                <MuiDrawer variant='permanent' width={drawerWidth} />
+                <MuiDrawer variant='permanent' width={drawerWidth} isOpen={isDrawerOpen} setIsOpen={setIsDrawerOpen}  />
             </TabletBox>
             <Layout>
                 <AppBar position='fixed' sx={appBarStyles}>

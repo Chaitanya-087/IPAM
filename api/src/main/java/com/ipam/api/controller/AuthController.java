@@ -25,6 +25,11 @@ import com.ipam.api.dto.SignupBody;
 import com.ipam.api.entity.User;
 import com.ipam.api.security.DomainUserService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -39,6 +44,12 @@ public class AuthController {
     DomainUserService userService;
 
     @PostMapping("/token")
+    @Operation(summary = "Generate Token", description = "Generate Token for user", responses = {
+        @ApiResponse(responseCode = "200", description = "Token generated successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = JwtResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid username/password supplied"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "404", description = "User not found")
+    })
     public ResponseEntity<JwtResponse> token(@RequestBody LoginBody loginBody) {
         Instant now = Instant.now();
         long expiry = 3600L;
@@ -67,6 +78,7 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
+    @Operation(summary = "register's user", description = "")
     public ResponseEntity<MessageResponse> registerUser(@RequestBody SignupBody signUpRequest) {
         if (userService.existsByName(signUpRequest.getUsername())) {
             return ResponseEntity.badRequest()
