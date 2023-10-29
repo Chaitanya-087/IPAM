@@ -9,8 +9,8 @@ This is the API documentation for IP Address Management, based on the OpenAPI 3.
 3. [Base URL](#base-url)
 4. [Authentication & Authorization](#authentication)
 5. [Authentication Endpoints](#authentication-endpoints)
-6. [IPAM Endpoints (ADMIN)](#IPAM-ADMIN-endpoints)
-7. [IPAM Endpoints (USER)](#IPAM-USER-endpoints)
+6. [IPAM Endpoints (ADMIN)](#admin-endpoints)
+7. [IPAM Endpoints (USER)](#user-endpoints)
 8. [Common Endpoints](#common-endpoints)
 
 ## Introduction <a name="introduction"></a>
@@ -107,7 +107,7 @@ _________________
 
 _________________
 
-## IPAM Endpoints (ADMIN) <a name="IPAM-ADMIN-endpoints"></a>
+## IPAM Endpoints (ADMIN) <a name="admin-endpoints"></a>
 
 ### get all users
 
@@ -657,7 +657,7 @@ This endpoint allows administrators to retrieve a list of reservations. To acces
 
 _________________
 
-## IPAM Endpoints (USER) <a name="IPAM-USER-endpoints"></a>
+## IPAM Endpoints (USER) <a name="user-endpoints"></a>
 
 ### get all allocated ipaddresses for specific user
 
