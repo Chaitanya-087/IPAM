@@ -1,11 +1,13 @@
 import React, {useState, useEffect, useRef, useCallback} from "react";
-import {Backdrop, Box, Button, Fade, IconButton, Modal, Paper, TextField, Typography} from "@mui/material";
+import {Alert, Backdrop, Box, Button, Collapse, Fade, IconButton, Modal, Paper, TextField, Typography} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import {ToastContainer, toast} from "react-toastify";
 import {Chip} from "@mui/joy";
 import useAxiosPrivate from "../../../hooks/useAxiosPrivate";
 import Stats from "../Stats";
 import DataTable from "../../../components/Table";
+import CloseIcon from "@mui/icons-material/Close";
+import PropTypes from "prop-types";
 
 const style = {
     position: "absolute",
@@ -34,8 +36,8 @@ function ActionButton(props) {
     const {axiosPrivate} = useAxiosPrivate();
 
     const reserve = async () => {
-        await axiosPrivate.post(`/api/ipam/reserve/network-object/${id}`, {purpose: "purpose"});
-        toast(`🦄 ip address reserved`, toastConfig);
+        const response = await axiosPrivate.post(`/api/ipam/reserve/network-object/${id}`, {purpose: "purpose"});
+        toast(`🦄 ${response.data.message}`, toastConfig);
         fetchData();
     };
 
@@ -46,7 +48,26 @@ function ActionButton(props) {
     );
 }
 
+ActionButton.propTypes = {
+    id: PropTypes.string.isRequired,
+    status: PropTypes.string.isRequired,
+    fetchData: PropTypes.func.isRequired,
+};
+
 export default function IPRanges() {
+    const [rows, setRows] = useState([]);
+    const [open, setOpen] = useState(false);
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [totalRows, setTotalRows] = useState(0);
+    const [stats, setStats] = useState({reservedCount: 0, inuseCount: 0, availableCount: 0});
+    const [form, setForm] = useState({startAddress: "", endAddress: ""});
+    const hasMounted = useRef(false);
+    const {axiosPrivate} = useAxiosPrivate();
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
+    const [errorMessage,setErrorMessage] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+
     const columns = [
         {
             id: "startAddress",
@@ -142,15 +163,6 @@ export default function IPRanges() {
             },
         },
     ];
-    const [rows, setRows] = useState([]);
-    const [open, setOpen] = useState(false);
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [totalRows, setTotalRows] = useState(0);
-    const [stats, setStats] = useState({reservedCount: 0, inuseCount: 0, availableCount: 0});
-    const [form, setForm] = useState({startAddress: "", endAddress: ""});
-    const hasMounted = useRef(false);
-    const {axiosPrivate} = useAxiosPrivate();
 
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -161,25 +173,33 @@ export default function IPRanges() {
     };
 
     const post = async (event) => {
-        event.preventDefault();
-        if (form.startAddress === "" || form.endAddress === "") {
-            return;
-        }
-        const URL = "/api/ipam/ipranges";
-        const res = await axiosPrivate.post(URL, {...form});
-        toast(`🦄 new ip address added to pool`, toastConfig);
-        if (res.status === 201) {
-            fetchData();
-            handleClose();
+        try {
+            event.preventDefault();
+            if (form.startAddress === "" || form.endAddress === "") {
+                setErrorMessage("Please fill all fields");
+                setIsAlertOpen(true);
+            }
+            const URL = "/api/ipam/ipranges";
+            const res = await axiosPrivate.post(URL, {...form});
+            toast(`🦄 ip range added to pool`, toastConfig);
+            if (res.status === 201) {
+                fetchData();
+                handleClose();
+                setForm({startAddress: "", endAddress: ""})
+            }
+        } catch(error) {
+            setErrorMessage(error.response.data.message);
         }
     };
 
     const fetchData = useCallback(async () => {
         try {
+            setIsLoading(true);
             const URL = `/api/ipam/ipranges?page=${page}&size=${rowsPerPage}`;
             const response = await axiosPrivate.get(URL);
             setRows(response.data.data);
             setTotalRows(response.data.totalElements);
+            setIsLoading(false);
         } catch (error) {
             console.error("Error fetching data:", error);
         }
@@ -207,7 +227,7 @@ export default function IPRanges() {
 
     return (
         <React.Fragment>
-            <Stats stats={stats} />
+            <Stats stats={stats} fetchStats={fetchStats} />
             <Paper
                 sx={{
                     width: "100%",
@@ -233,6 +253,7 @@ export default function IPRanges() {
                 onPageChange={handleChangePage}
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
+                isLoading={isLoading}
             />
             <Modal
                 aria-labelledby='transition-modal-title'
@@ -251,6 +272,24 @@ export default function IPRanges() {
                         <Typography id='transition-modal-title' variant='h6' component='h2'>
                             Add IP Range
                         </Typography>
+                        <Collapse in={isAlertOpen}>
+                            <Alert
+                                severity='error'
+                                action={
+                                    <IconButton
+                                        aria-label='close'
+                                        color='inherit'
+                                        size='small'
+                                        onClick={() => {
+                                            setIsAlertOpen(false);
+                                        }}>
+                                        <CloseIcon fontSize='inherit' />
+                                    </IconButton>
+                                }
+                                sx={{mb: 2}}>
+                                {errorMessage}
+                            </Alert>
+                        </Collapse>
                         <TextField
                             sx={{width: "100%", marginBottom: "1rem"}}
                             id='outlined-basic'

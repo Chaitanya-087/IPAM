@@ -16,7 +16,7 @@ const toastConfig = {
     theme: "light",
 };
 
-const IPRangesTable = ({type}) => {
+function IPRangesTable({type}) {
     const [rows, setRows] = useState([]);
     const {authState} = useAuth();
     const [page, setPage] = useState(0);
@@ -24,6 +24,7 @@ const IPRangesTable = ({type}) => {
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const hasMounted = useRef(false);
     const {axiosPrivate} = useAxiosPrivate();
+    const [isLoading, setIsLoading] = useState(false);
     const columns = [
         {
             id: "startAddress",
@@ -90,7 +91,7 @@ const IPRangesTable = ({type}) => {
             id: "status",
             label: "Actions",
             minWidth: 170,
-            component: function ({value,id}) {
+            component: function ({value, id}) {
                 return (
                     <Button variant='contained' onClick={() => request(id)} disabled={value === "IN_USE"}>
                         Request
@@ -117,6 +118,7 @@ const IPRangesTable = ({type}) => {
 
     const fetchData = useCallback(async () => {
         try {
+            setIsLoading(true);
             const URL =
                 type === "available"
                     ? `/api/ipam/ipranges/available?page=${page}&size=${rowsPerPage}`
@@ -124,6 +126,7 @@ const IPRangesTable = ({type}) => {
             const response = await axiosPrivate.get(URL);
             setRows(response.data.data);
             setTotalRows(response.data.totalElements);
+            setIsLoading(false);
         } catch (error) {
             console.error("Error fetching data:", error);
         }
@@ -162,11 +165,12 @@ const IPRangesTable = ({type}) => {
                 onPageChange={handleChangePage}
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
+                isLoading={isLoading}
             />
             <ToastContainer />
         </React.Fragment>
     );
-};
+}
 
 export default function IPRanges() {
     const [currentTabIndex, setCurrentTabIndex] = useState(0);

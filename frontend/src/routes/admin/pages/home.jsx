@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef, useCallback, useMemo} from "react";
+import React, {useState, useEffect, useRef, useCallback} from "react";
 import {Box, Tabs, Tab} from "@mui/material";
 import useAxiosPrivate from "../../../hooks/useAxiosPrivate";
 import Stats from "../Stats";
@@ -11,7 +11,6 @@ export default function Home() {
     const {axiosPrivate} = useAxiosPrivate();
     const [stats, setStats] = useState({reservedCount: 0, inuseCount: 0, availableCount: 0});
     const [currentTabIndex, setCurrentTabIndex] = useState(0);
-    
     const handleChange = (event, newValue) => {
         setCurrentTabIndex(newValue);
     };
@@ -26,14 +25,11 @@ export default function Home() {
         }
     }, [axiosPrivate]);
 
-    const tabs = useMemo(
-        () => [
-            {id: "ipaddresses", label: "ip addresses", component: <IPAddressesTable />},
-            {id: "users", label: "users", component: <UsersTable />},
-            {id: "reservations", label: "reservations", component: <ReservationsTable />},
-        ],
-        []
-    );
+    const tabs = [
+        {id: "ipaddresses", label: "ip addresses", component: <IPAddressesTable />},
+        {id: "users", label: "users", component: <UsersTable />},
+        {id: "reservations", label: "reservations", component: <ReservationsTable />},
+    ];
 
     useEffect(() => {
         if (hasMounted.current) {
@@ -46,7 +42,7 @@ export default function Home() {
 
     return (
         <React.Fragment>
-            <Stats stats={stats} />
+            <Stats stats={stats} fetchStats={fetchStats} />
             <Box sx={{paddingTop: "1rem", borderBottom: "1px solid #e0e0e0"}}>
                 <Tabs value={currentTabIndex} onChange={handleChange}>
                     {tabs.map((tab, index) => (

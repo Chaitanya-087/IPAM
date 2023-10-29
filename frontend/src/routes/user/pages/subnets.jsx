@@ -16,7 +16,7 @@ const toastConfig = {
     theme: "light",
 };
 
-const SubnetsTable = ({type}) => {
+function SubnetsTable({type}) {
     const [rows, setRows] = useState([]);
     const {authState} = useAuth();
     const [page, setPage] = useState(0);
@@ -24,7 +24,7 @@ const SubnetsTable = ({type}) => {
     const hasMounted = useRef(false);
     const {axiosPrivate} = useAxiosPrivate();
     const [totalRows, setTotalRows] = useState(0);
-
+    const [isLoading, setIsLoading] = useState(false);
     const columns = [
         {
             id: "name",
@@ -142,6 +142,7 @@ const SubnetsTable = ({type}) => {
 
     const fetchData = useCallback(async () => {
         try {
+            setIsLoading(true);
             const URL =
                 type === "available"
                     ? `/api/ipam/subnets/available?page=${page}&size=${rowsPerPage}`
@@ -149,6 +150,7 @@ const SubnetsTable = ({type}) => {
             const response = await axiosPrivate.get(URL);
             setRows(response.data.data);
             setTotalRows(response.data.totalElements);
+            setIsLoading(false);
         } catch (error) {
             console.error("Error fetching data:", error);
         }
@@ -187,11 +189,12 @@ const SubnetsTable = ({type}) => {
                 onPageChange={handleChangePage}
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
+                isLoading={isLoading}
             />
             <ToastContainer />
         </React.Fragment>
     );
-};
+}
 
 export default function Subnets() {
     const [currentTabIndex, setCurrentTabIndex] = useState(0);

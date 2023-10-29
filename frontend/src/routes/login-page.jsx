@@ -8,7 +8,9 @@ import {BarLoader} from "react-spinners";
 import "../styles/auth.css";
 import useAuth from "../hooks/useAuth";
 import instance from "../api/axios";
-import { useLocation } from "react-router-dom";
+import {useLocation} from "react-router-dom";
+import {Alert, Collapse, IconButton} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 
 const LoginPage = () => {
     const navigate = useNavigate();
@@ -17,17 +19,33 @@ const LoginPage = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const {state} = useLocation();
+    const [errorMessage, setErrorMessage] = useState("");
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
+
+    const onChangeHandler = (setState) => (e) => {
+        setErrorMessage("");
+        setIsAlertOpen(false);
+        setState(e.target.value);
+    }
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (username === "" || password === "") {
-            return;
-        }
-        setIsLoading(true);
-        await login(username, password);
+        try {
+            e.preventDefault();
+            if (username === "" || password === "") {
+                return;
+            }
+            setIsLoading(true);
+            await login(username, password);
 
-        setPassword("");
-        setUsername("");
+            setPassword("");
+            setUsername("");
+        } catch (error) {
+            setIsLoading(false);
+            setIsAlertOpen(true);
+            if (error.response.status === 401) {
+                setErrorMessage("Invalid username or password");
+            }
+        }
     };
 
     const login = async (username, password) => {
@@ -57,6 +75,24 @@ const LoginPage = () => {
                     <form className='auth-form' onSubmit={handleSubmit}>
                         <h3 className='auth-title'>Welcome back</h3>
                         <p className='auth-desc'>Welcome back! Please enter your details</p>
+                        <Collapse in={isAlertOpen}>
+                            <Alert
+                                severity='error'
+                                action={
+                                    <IconButton
+                                        aria-label='close'
+                                        color='inherit'
+                                        size='small'
+                                        onClick={() => {
+                                            setIsAlertOpen(false);
+                                        }}>
+                                        <CloseIcon fontSize='inherit' />
+                                    </IconButton>
+                                }
+                                sx={{mb: 2}}>
+                                {errorMessage}
+                            </Alert>
+                        </Collapse>
                         <div className='input-group'>
                             <label htmlFor='username' className='label'>
                                 username
@@ -70,7 +106,7 @@ const LoginPage = () => {
                                     autoComplete='username'
                                     autoFocus='on'
                                     value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
+                                    onChange={onChangeHandler(setUsername)}
                                     id='username'
                                 />
                             </div>
@@ -87,7 +123,7 @@ const LoginPage = () => {
                                     placeholder='Enter your password'
                                     min='6'
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={onChangeHandler(setPassword)}
                                     id='password'
                                 />
                                 {!showPassword ? (
@@ -97,7 +133,7 @@ const LoginPage = () => {
                                 )}
                             </div>
                         </div>
-                        <button className='auth-btn' type='submit' id="submit">
+                        <button className='auth-btn' type='submit' id='submit'>
                             {isLoading ? (
                                 <div className='loader'>
                                     <BarLoader color='#fff' loading={isLoading} size={10} height={2} />

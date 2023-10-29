@@ -5,6 +5,7 @@ import {ToastContainer, toast} from "react-toastify";
 import useAxiosPrivate from "../../../hooks/useAxiosPrivate";
 import {Chip} from "@mui/joy";
 import DataTable from "../../../components/Table";
+import PropTypes from "prop-types";
 
 const toastConfig = {
     position: "top-right",
@@ -46,6 +47,12 @@ function ActionButton(props) {
         </Button>
     );
 }
+
+ActionButton.propTypes = {
+    id: PropTypes.number.isRequired,
+    status: PropTypes.string.isRequired,
+    fetchData: PropTypes.func.isRequired,
+};
 
 function IPAdressesTable({type}) {
     const columns = [
@@ -111,7 +118,7 @@ function IPAdressesTable({type}) {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalRows, setTotalRows] = useState(0);
-
+    const [isLoading, setIsLoading] = useState(false);
     const {authState} = useAuth();
     const {axiosPrivate} = useAxiosPrivate();
     const hasMounted = useRef(false);
@@ -124,7 +131,6 @@ function IPAdressesTable({type}) {
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
-        setRangeId("");
     };
 
     const handleChangeRowsPerPage = (event) => {
@@ -142,17 +148,37 @@ function IPAdressesTable({type}) {
     }, [axiosPrivate]);
 
     const fetchData = useCallback(async () => {
-        let URL = `/api/ipam/ipaddresses/available?page=${page}&size=${rowsPerPage}`;
-        if (type === "allocated") {
-            URL = `/api/ipam/users/${authState?.id}/ipaddresses?page=${page}&size=${rowsPerPage}`;
+        try {
+            setIsLoading(true);
+            const generateUrl = (page, rowsPerPage, rangeId) => {
+                if (rangeId) {
+                    return `/api/ipam/ipranges/${rangeId}/ipaddresses/available?page=${page}&size=${rowsPerPage}`;
+                }
+                if (type === "allocated") {
+                    return `/api/ipam/users/${authState?.id}/ipaddresses?page=${page}&size=${rowsPerPage}`;
+                }
+                return `/api/ipam/ipaddresses/available?page=${page}&size=${rowsPerPage}`;
+            };
+            const url = generateUrl(page, rowsPerPage, rangeId);
+            const response = await axiosPrivate.get(url);
+            const {data, totalElements} = response.data;
+
+            setRows(data);
+            setTotalRows(totalElements);
+        } catch (error) {
+            console.log("Error fetching data:", error);
+        } finally {
+            setIsLoading(false);
         }
-        if (rangeId) {
-            URL = `/api/ipam/ipranges/${rangeId}/ipaddresses/available?page=${page}&size=${rowsPerPage}`;
-        }
-        const response = await axiosPrivate.get(URL);
-        setRows(response.data.data);
-        setTotalRows(response.data.totalElements);
     }, [authState?.id, axiosPrivate, page, rangeId, rowsPerPage, type]);
+
+    useEffect(() => {
+        const resetPageAndRowsPerPage = () => {
+            setPage(0);
+            setRowsPerPage(10);
+        };
+        resetPageAndRowsPerPage();
+    }, [rangeId, type]);
 
     useEffect(() => {
         if (hasMounted.current) {
@@ -210,6 +236,7 @@ function IPAdressesTable({type}) {
                 rowsPerPage={rowsPerPage}
                 onPageChange={handleChangePage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
+                isLoading={isLoading}
             />
             <ToastContainer />
         </React.Fragment>

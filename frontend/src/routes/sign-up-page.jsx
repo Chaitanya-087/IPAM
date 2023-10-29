@@ -8,6 +8,7 @@ import {AuthContext} from "../context/AuthContext";
 import {useContext} from "react";
 import instance from "../api/axios";
 import {BarLoader} from "react-spinners";
+
 const SignUpPage = () => {
     const navigate = useNavigate();
     const {isLoading, setIsLoading} = useContext(AuthContext);
@@ -75,7 +76,7 @@ const SignUpPage = () => {
                                     type='email'
                                     name='email'
                                     required
-                                    pattern='^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+                                    pattern='/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g'
                                     placeholder='Enter email'
                                     autoComplete='username'
                                     value={email}
@@ -117,7 +118,7 @@ const SignUpPage = () => {
                             )}
                         </button>
                         <span className='message'>
-                            Already have an account?{" "}
+                            Already have an account?
                             <Link to='/login' className='link-to'>
                                 Sign in
                             </Link>

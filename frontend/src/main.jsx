@@ -19,15 +19,15 @@ const router = createBrowserRouter([
         children: [
             {
                 path: "/",
-                element: <RoleGuard componentName="Home"/>
+                element: <RoleGuard componentName="home" />,
             },
             {
                 path: "/ip-ranges",
-                element: <RoleGuard componentName="IPRanges" />,
+                element: <RoleGuard componentName="ipRanges" />,
             },
             {
                 path: "/subnets",
-                element: <RoleGuard componentName="Subnets" />,
+                element: <RoleGuard componentName="subnets" />,
             },
         ],
     },

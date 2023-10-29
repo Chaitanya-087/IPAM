@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+    web:
+        build: ./frontend
+        ports:
+            - 9090:9090
+        restart: always
+        depends_on:
+            - api
+        volumes:
+            - ./frontend:/app
+        environment:
+            - CHOKIDAR_USEPOLLING=true
+            - GENERATE_SOURCEMAP=false
+            - INLINE_RUNTIME_CHUNK=false
+
+        tty: true
+
+    api:
+        build: ./api
+        ports:
+            - 8080:8080
+        restart: always
+        depends_on:
+            - mysqldb
+        volumes:
+            - ./api:/app
+
+        environment:
+            - SPRING_DATASOURCE_URL=jdbc:mysql://mysqldb:3306/ipam?createDatabaseIfNotExist=true
+            - SPRING_DATASOURCE_USERNAME=chaitanya
+            - SPRING_DATASOURCE_PASSWORD=chaitanya
+
+    mysqldb:
+        image: mysql:latest
+        restart: always
+        environment:
+            - MYSQL_ROOT_PASSWORD=root
+            - MYSQL_DATABASE=ipam
+            - MYSQL_USER=chaitanya
+            - MYSQL_PASSWORD=chaitanya
+        volumes:
+            - ./mysql:/var/lib/mysql

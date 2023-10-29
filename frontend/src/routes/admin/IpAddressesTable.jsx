@@ -1,8 +1,10 @@
 import {Chip} from "@mui/joy";
 import {
+    Alert,
     Backdrop,
     Box,
     Button,
+    Collapse,
     Fade,
     FormControl,
     IconButton,
@@ -19,6 +21,7 @@ import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import {ToastContainer, toast} from "react-toastify";
 import DataTable from "../../components/Table";
 import AddIcon from "@mui/icons-material/Add";
+import CloseIcon from "@mui/icons-material/Close";
 
 const style = {
     position: "absolute",
@@ -30,6 +33,9 @@ const style = {
     borderRadius: "8px",
     p: 4,
     width: "360px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.75rem",
 };
 
 const toastConfig = {
@@ -90,6 +96,9 @@ export default function IPAddressesTable() {
     const [ranges, setRanges] = useState([]);
     const [rangeId, setRangeId] = useState("");
     const {axiosPrivate} = useAxiosPrivate();
+    const [errorMessage, setErrorMessage] = useState("");
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const columns = [
         {
@@ -185,35 +194,55 @@ export default function IPAddressesTable() {
     };
 
     const post = async (event) => {
-        event.preventDefault();
-        if (form.address === "") {
-            return;
-        }
-        const URL = "/api/ipam/ipaddresses";
-        const res = await axiosPrivate.post(URL, {...form});
-        toast(`🦄 new ip address added to pool`, toastConfig);
-        if (res.status === 201) {
-            fetchData();
-            handleClose();
+        try {
+            event.preventDefault();
+            if (form.address === "") {
+                setErrorMessage("emtpy form");
+                setIsAlertOpen(true);
+            }
+            const URL = "/api/ipam/ipaddresses";
+            const res = await axiosPrivate.post(URL, {...form});
+            toast(`🦄 new ip address added to pool`, toastConfig);
+            if (res.status === 201) {
+                setIsAlertOpen(false);
+                fetchData();
+                handleClose();
+            }
+        } catch (error) {
+            setErrorMessage(error.response.data.message);
+            setIsAlertOpen(true);
         }
     };
 
     const fetchData = useCallback(async () => {
         try {
-            let url = `/api/ipam/ipaddresses?page=${page}&size=${rowsPerPage}`;
-            if (rangeId) {
-                url = `/api/ipam/ipranges/${rangeId}/ipaddresses?page=${page}&size=${rowsPerPage}`;
-                setPage(0);
-                setRowsPerPage(10);
-            }
-
+            setIsLoading(true);
+            const generateUrl = (page, rowsPerPage, rangeId) => {
+                if (rangeId) {
+                    return `/api/ipam/ipranges/${rangeId}/ipaddresses?page=${page}&size=${rowsPerPage}`;
+                }
+                return `/api/ipam/ipaddresses?page=${page}&size=${rowsPerPage}`;
+            };
+            const url = generateUrl(page, rowsPerPage, rangeId);
             const response = await axiosPrivate.get(url);
-            setRows(response.data.data);
-            setTotalRows(response.data.totalElements);
+            const {data, totalElements} = response.data;
+
+            setRows(data);
+            setTotalRows(totalElements);
         } catch (error) {
             console.error("Error fetching data:", error);
+        } finally {
+            setIsLoading(false);
         }
     }, [axiosPrivate, page, rowsPerPage, rangeId]);
+
+    useEffect(() => {
+        const resetPageAndRowsPerPage = () => {
+            setPage(0);
+            setRowsPerPage(10);
+        };
+        resetPageAndRowsPerPage();
+    }, [rangeId]);
 
     const fetchRanges = useCallback(async () => {
         try {
@@ -284,6 +313,7 @@ export default function IPAddressesTable() {
                 onPageChange={handleChangePage}
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
+                isLoading={isLoading}
             />
             <Modal
                 aria-labelledby='transition-modal-title'
@@ -302,6 +332,26 @@ export default function IPAddressesTable() {
                         <Typography id='transition-modal-title' variant='h6' component='h2'>
                             Add IP Address
                         </Typography>
+
+                        <Collapse in={isAlertOpen}>
+                            <Alert
+                                severity='error'
+                                action={
+                                    <IconButton
+                                        aria-label='close'
+                                        color='inherit'
+                                        size='small'
+                                        onClick={() => {
+                                            setIsAlertOpen(false);
+                                        }}>
+                                        <CloseIcon fontSize='inherit' />
+                                    </IconButton>
+                                }
+                                sx={{mb: 2}}>
+                                {errorMessage}
+                            </Alert>
+                        </Collapse>
+
                         <TextField
                             sx={{width: "100%", marginBottom: "1rem"}}
                             id='outlined-basic'

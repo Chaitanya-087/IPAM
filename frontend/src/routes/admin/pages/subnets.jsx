@@ -1,11 +1,24 @@
 import React, {useState, useEffect, useRef, useCallback} from "react";
-import {Backdrop, Box, Button, Fade, IconButton, Modal, Paper, TextField, Typography} from "@mui/material";
+import {
+    Alert,
+    Backdrop,
+    Box,
+    Button,
+    Collapse,
+    Fade,
+    IconButton,
+    Modal,
+    Paper,
+    TextField,
+    Typography,
+} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import {ToastContainer, toast} from "react-toastify";
 import useAxiosPrivate from "../../../hooks/useAxiosPrivate";
 import {Chip} from "@mui/joy";
 import Stats from "../Stats";
 import DataTable from "../../../components/Table";
+import CloseIcon from "@mui/icons-material/Close";
 
 const style = {
     position: "absolute",
@@ -48,6 +61,22 @@ function ActionButton(props) {
 }
 
 export default function Subnets() {
+    const [totalRows, setTotalRows] = useState(0);
+    const [rows, setRows] = useState([]);
+    const [open, setOpen] = useState(false);
+    const [stats, setStats] = useState({reservedCount: 0, inuseCount: 0, availableCount: 0});
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [form, setForm] = useState({
+        name: "",
+        cidr: "",
+        mask: "",
+        gateway: "",
+    });
+    const hasMounted = useRef(false);
+    const {axiosPrivate} = useAxiosPrivate();
+    const [errorMessage, setErrorMessage] = useState("");
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
     const columns = [
         {
             id: "name",
@@ -167,20 +196,6 @@ export default function Subnets() {
             },
         },
     ];
-    const [totalRows, setTotalRows] = useState(0);
-    const [rows, setRows] = useState([]);
-    const [open, setOpen] = useState(false);
-    const [stats, setStats] = useState({reservedCount: 0, inuseCount: 0, availableCount: 0});
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [form, setForm] = useState({
-        name: "",
-        cidr: "",
-        mask: "",
-        gateway: "",
-    });
-    const hasMounted = useRef(false);
-    const {axiosPrivate} = useAxiosPrivate();
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
     const handleChangePage = (event, newPage) => setPage(newPage);
@@ -190,17 +205,24 @@ export default function Subnets() {
     };
 
     const post = async (e) => {
-        e.preventDefault();
-        if (form.name === "" || form.cidr === "" || form.mask === "" || form.gateway === "") {
-            return;
-        }
-        const URL = "/api/ipam/subnets";
-        const res = await axiosPrivate.post(URL, {...form});
-        toast(`🦄 new subnet added to pool`, toastConfig);
-        if (res.status === 201) {
-            fetchData();
-            fetchStats();
-            handleClose();
+        try {
+            e.preventDefault();
+            if (form.name === "" || form.cidr === "" || form.mask === "" || form.gateway === "") {
+                setErrorMessage("Please fill all fields");
+                setIsAlertOpen(true);
+            }
+            const URL = "/api/ipam/subnets";
+            const res = await axiosPrivate.post(URL, {...form});
+            toast(`🦄 new subnet added to pool`, toastConfig);
+            if (res.status === 201) {
+                fetchData();
+                fetchStats();
+                handleClose();
+                setForm({name: "", cidr: "", mask: "", gateway: ""});
+            }
+        } catch (error) {
+            setErrorMessage(error.response.data.message);
+            setIsAlertOpen(true);
         }
     };
 
@@ -238,7 +260,7 @@ export default function Subnets() {
 
     return (
         <React.Fragment>
-            <Stats stats={stats} />
+            <Stats stats={stats} fetchStats={fetchStats} />
             <Paper
                 sx={{
                     width: "100%",
@@ -282,6 +304,24 @@ export default function Subnets() {
                         <Typography id='transition-modal-title' variant='h6' component='h2'>
                             Add Subnet
                         </Typography>
+                        <Collapse in={isAlertOpen}>
+                            <Alert
+                                severity='error'
+                                action={
+                                    <IconButton
+                                        aria-label='close'
+                                        color='inherit'
+                                        size='small'
+                                        onClick={() => {
+                                            setIsAlertOpen(false);
+                                        }}>
+                                        <CloseIcon fontSize='inherit' />
+                                    </IconButton>
+                                }
+                                sx={{mb: 2}}>
+                                {errorMessage}
+                            </Alert>
+                        </Collapse>
                         <TextField
                             sx={{width: "100%", marginBottom: "1rem"}}
                             id='outlined-basic'

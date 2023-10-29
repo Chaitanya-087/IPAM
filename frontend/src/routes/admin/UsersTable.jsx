@@ -4,6 +4,13 @@ import useAxiosPrivate from "../../hooks/useAxiosPrivate";
 import DataTable from "../../components/Table";
 
 export default function UsersTable() {
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rows, setRows] = useState([]);
+    const [totalRows, setTotalRows] = useState(0);
+    const hasMounted = useRef(false);
+    const {axiosPrivate} = useAxiosPrivate();
+    const [isLoading, setIsLoading] = useState(false);
     const columns = [
         {
             id: "name",
@@ -66,12 +73,6 @@ export default function UsersTable() {
             },
         },
     ];
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [rows, setRows] = useState([]);
-    const [totalRows, setTotalRows] = useState(0);
-    const hasMounted = useRef(false);
-    const {axiosPrivate} = useAxiosPrivate();
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -84,9 +85,11 @@ export default function UsersTable() {
 
     useEffect(() => {
         const fetchUsers = async () => {
+            setIsLoading(true)
             const response = await axiosPrivate.get(`/api/ipam/users?page=${page}&size=${rowsPerPage}`);
             setRows(response.data.data);
             setTotalRows(response.data.totalElements);
+            setIsLoading(false)
         };
         if (hasMounted.current) {
             fetchUsers();
@@ -118,6 +121,7 @@ export default function UsersTable() {
                 onPageChange={handleChangePage}
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
+                isLoading={isLoading}
             />
         </Paper>
     );
