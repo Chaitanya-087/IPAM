@@ -1,6 +1,6 @@
 # API Documentation
 
-This is the API documentation for Liscence Mangement System, based on the OpenAPI 3.0.1 specification.
+This is the API documentation for IP Address Management, based on the OpenAPI 3.0.1 specification.
 
 ## Table of Contents
 
@@ -16,72 +16,99 @@ This is the API documentation for Liscence Mangement System, based on the OpenAP
 
 This documentation provides detailed information about the API, which allows you to interact with the endpoints. It is based on the OpenAPI 3.0.1 specification and is intended to help understand how to use the available endpoints.
 
+_________________
+
 ## API Description <a name="description"></a>
 
 The IPAM (IP Address Management) API is designed to manage IP address-related operations within a network infrastructure. It provides functionalities to create, allocate, reserve, and manage IP addresses, subnets, and IP ranges.
+
+_________________
 
 ## Base URL <a name="base-url"></a>
 
 - Base URL: [http://localhost:8080](http://localhost:8080)
 - Description: This is the base URL for accessing the API endpoints.
 
+_________________
+
 ## Authentication & Authorization <a name="authentication"></a>
 
 To access the API, you must use Bearer Token Authentication. Include a valid JWT (JSON Web Token) in the `Authorization` header of your requests.
-the API endpoints are authorized by a `ROLE` which are ADMIN and USER roles. 
+the API endpoints are authorized by a `ROLE` which are ADMIN and USER roles.
+_________________
 
 ## Authentication Endpoints <a name="authentication-endpoints"></a>
 
 ### /api/auth/token
 
-#### POST `/api/auth/token`
+**HTTP Method:** POST
 
-- **Description**: Generate Token for user
-- **Request Body**:
-  - Content-Type: `application/json`
-- **Schema:**
+**Endpoint:** `/api/auth/token`
+
+**Description**: Generate Token for user
+
+**Request Body:**
+
+- Content-Type: `application/json`
+- Schema
+
 ```json
 {
-  "username": "John Doe",
-  "password": "*********"
+  "username": "string",
+  "password": "string"
 }
 ```
-- **Responses**:
-    - Content-Type: `application/json`
-- **Schema:** 
+
+**Response Body**:
+
+- Content-Type: `application/json`
+- Schema
+
 ```json
 {
-  "userId": 1,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
-  "username": "John Doe"
+  "id": 0,
+  "token": "string",
+  "username": "string"
 }
 ```
 
 ### /api/auth/signup
 
-#### POST `/api/auth/signup`
+**HTTP Method:** POST
 
-- **Description:** Register a user
-- **Request Body:**
-  - Content-Type: `application/json`
-- **Schema:**
+**Endpoint:** `/api/auth/signup`
+
+**Description:** Register a user
+
+**Request Body:**
+
+- Content-Type: `application/json`
+- Schema
+
 ```json
 {
-  "username": "John Doe",
-  "email": "john234@gmail.com",
-  "password": "*******"
-}
+  "username": "string",
+  "email": "string",
+  "password": "string"
+}  
 ```
-- **Responses**:
-  - 200: OK
-    - Content-Type: `application/json`
-  - **Schema**:
+
+**Response Body**:
+
+- Content-Type: `application/json`
+- Schema
+
 ```json
 {
-  "message" : "User registered successfully!"
+  "message" : "string"
 }
 ```
-### IPAM Endpoints (ADMIN) <a name="IPAM-ADMIN-endpoints"></a>
+
+_________________
+
+## IPAM Endpoints (ADMIN) <a name="IPAM-ADMIN-endpoints"></a>
+
+### /api/ipam/users
 
 **HTTP Method:** GET
 
@@ -91,37 +118,35 @@ the API endpoints are authorized by a `ROLE` which are ADMIN and USER roles.
 This endpoint allows fetching a list of users. To access this endpoint, the user must have the 'SCOPE_ROLE_ADMIN' authority.
 
 **Request Parameters:**
+
 - `page` (Optional, Default: 0) - An integer indicating the page number.
 - `size` (Optional, Default: 10) - An integer indicating the page size.
 
-**Response:**
+**Response Body:**
+
 - Content-Type: `application/json`
-- Schema:
+- Schema
+
 ```json
-{
-    "totalPages": 0,
-    "currentPageSize": 0,
-    "maxPageSize": 10,
-    "currentPage": 0,
-    "hasNext": false,
-    "hasPrevoius": false,
-    "data": [
-              {
-                  "id": 1,
-                  "username": "name",
-                  "email": "john234@gmail.com",
-                  "password": "{bycrpt}********",  
-              }
-            ]
-}
+[
+  {
+    "id": 0,
+    "name": "string",
+    "email": "string",
+    "ipAddressesCount": 0,
+    "ipRangesCount": 0,
+    "subnetsCount": 0
+  }
+]
 ```
 
 **Example Usage:**
+
 ```http
 GET /api/ipam/users?page=1&size=20
 ```
 
-## Method: addIpAddress
+### /api/ipam/ipaddresses
 
 **HTTP Method:** POST
 
@@ -131,29 +156,41 @@ GET /api/ipam/users?page=1&size=20
 This endpoint allows adding a new IP address. To access this endpoint, the user must have the 'SCOPE_ROLE_ADMIN' authority.
 
 **Request Body:**
-- **Content-Type:** `application/json`
-- **Schema:**
+
+- Content-Type: `application/json`
+- Schema
+
 ```json
 {
-  "address": "192.168.0.1"
+  "address": "string"
 }
 ```
+
 **Response Body:**
-- **Content-Type:** `application/json`
-- **Schema:**
+
+- Content-Type: `application/json`
+- Schema
+
 ```json
 {
-  "id": 1,
-  "user": null,
-  "status": "AVAILABLE",
-  "createdAt": "2023-10-28T14:30:00Z",
-  "updatedAt": "2023-10-28T14:30:00Z",
-  "expiration": null,
-  "dns": null,
-  "address": "192.168.0.1"
+  "id": 0,
+  "user": {
+    "id": 0,
+    "name": "string",
+    "email": "string",
+    "password": "string",
+    "role": "string"
+  },
+  "status": "RESERVED",
+  "createdAt": "2023-10-29T11:42:17.738Z",
+  "updatedAt": "2023-10-29T11:42:17.738Z",
+  "expiration": "2023-10-29T11:42:17.738Z",
+  "dns": "string",
+  "address": "string"
 }
 ```
-## Method: getIpAddresses
+
+### /api/ipam/ipaddresses
 
 **HTTP Method:** GET
 
@@ -163,43 +200,52 @@ This endpoint allows adding a new IP address. To access this endpoint, the user 
 This endpoint allows fetching a list of IP addresses. To access this endpoint, the user must have the 'SCOPE_ROLE_ADMIN' authority.
 
 **Request Parameters:**
+
 - `page` (Optional, Default: 0) - An integer indicating the page number.
 - `size` (Optional, Default: 10) - An integer indicating the page size.
 
 **Response Body:**
-- **Content-Type:** `application/json`.
-- **Schema:**
+
+- Content-Type: `application/json`.
+- Schema
+
 ```json
-  {
-    "totalPages": 0,
-    "currentPageSize": 0,
-    "maxPageSize": 10,
-    "currentPage": 0,
-    "hasNext": false,
-    "hasPrevious": false,
-    "data": [
-      {
-        "id": 1,
+{
+  "totalPages": 0,
+  "currentPageSize": 0,
+  "maxPageSize": 0,
+  "totalElements": 0,
+  "currentPage": 0,
+  "hasNext": true,
+  "hasPrevious": true,
+  "data": [
+    {
+        "id": 0,
         "user": {
-          "id": 1001,
-          "username": "John Doe",
-          "email": "john234@gmail.com",
-          "password": "*********"
-        },
-        "status": "AVAILABLE",
-        "createdAt": "2023-10-28T14:30:00Z",
-        "updatedAt": "2023-10-28T14:30:00Z",
-        "expiration": null,
-        "dns": null,
-        "address": "192.168.0.1"
-      }
-    ]
+        "id": 0,
+        "name": "string",
+        "email": "string",
+        "password": "string",
+        "role": "string"
+      },
+    "status": "RESERVED",
+    "createdAt": "2023-10-29T11:45:17.228Z",
+    "updatedAt": "2023-10-29T11:45:17.228Z",
+    "expiration": "2023-10-29T11:45:17.228Z",
+    "dns": "string",
+    "address": "string"
+    }
+  ]
 }    
 ```
+
 **Example Usage:**
+
 ```http
 GET /api/ipam/ipaddresses?page=1&size=20
 ```
+
+### /api/ipam/admin/ip-scan
 
 **HTTP Method:** GET
 
@@ -209,38 +255,123 @@ GET /api/ipam/ipaddresses?page=1&size=20
 This endpoint allows administrators to retrieve statistics related to IP addresses. Access to this endpoint requires the 'SCOPE_ROLE_ADMIN' authority.
 
 **Response Body:**
-- **Content-Type:** `application/json`
-- **Schema:**
+
+- Content-Type: `application/json`
+- Schema
+
 ```json
 {
-  "reservedCount": 4,
-  "inuseCount": 23,
-  "availableCount": 245
+  "reservedCount": 0,
+  "inuseCount": 0,
+  "availableCount": 0
 }
 ```
+
 **Example Usage:**
+
 ```http
 GET /api/ipam/admin/ip-scan
 ```
 
-## Method: addIPRange
+## /api/ipam/ipranges
 
 **HTTP Method:** POST
 
-**Endpoint:** `/ipranges`
+**Endpoint:** `/api/ipam/ipranges`
 
 **Description:**
 This endpoint allows administrators to add an IP range. Access to this endpoint requires the 'SCOPE_ROLE_ADMIN' authority.
 
 **Request Body:**
+
 - Content-Type: `application/json`
-- Schema:
+- Schema
+
 ```json
 {
-  
+  "startAddress": "string",
+  "endAddress": "string"
 }
 ```
-**Response:**
+
+**Response Body:**
+
 - Content-Type: `application/json`
-- Status Code: 201 (Created)
-- Schema: [IPRangeDTO](#iprangedto)
+- Schema
+
+```json
+{
+  "id": 0,
+  "startAddress": "string",
+  "endAddress": "string",
+  "status": "RESERVED",
+  "size": 0,
+  "createdAt": "2023-10-29T11:49:12.467Z",
+  "updatedAt": "2023-10-29T11:49:12.467Z",
+  "expirationDate": "2023-10-29T11:49:12.467Z",
+  "user": {
+    "id": 0,
+    "name": "string",
+    "email": "string",
+    "password": "string",
+    "role": "string"
+  }
+}
+```
+
+## /api/ipam/ipranges/{ipRangeId}/ipaddresses
+
+**HTTP Method**: GET
+
+**Endpoint:** `api/ipam/ipranges/{ipRangeId}/ipaddresses`
+
+**Description:**
+This endpoint retrieves a list of IP addresses associated with a specific IP range. It requires administrator (ROLE_ADMIN) authorization.
+
+**Request Parameters:**
+
+- `ipRangeId` (Path Parameter, Required) - The unique identifier of the IP range for which you want to retrieve IP addresses.
+- `page` (Query Parameter, Optional, Default: 0) - The page number for pagination.
+- `size` (Query Parameter, Optional, Default: 10) - The number of IP addresses to be displayed per page.
+
+**Response Body:**
+
+- Content-Type: `application/json`
+- Schema
+
+```json
+{
+  "totalPages": 0,
+  "currentPageSize": 0,
+  "maxPageSize": 0,
+  "totalElements": 0,
+  "currentPage": 0,
+  "hasNext": true,
+  "hasPrevious": true,
+  "data": [
+    {
+    "id": 0,
+    "startAddress": "string",
+    "endAddress": "string",
+    "status": "RESERVED",
+    "size": 0,
+    "createdAt": "2023-10-29T11:49:12.467Z",
+    "updatedAt": "2023-10-29T11:49:12.467Z",
+    "expirationDate": "2023-10-29T11:49:12.467Z",
+    "user": {
+      "id": 0,
+      "name": "string",
+      "email": "string",
+      "password": "string",
+      "role": "string"
+      }
+    }
+  ]
+}
+```
+
+### Example Usage
+
+```http
+GET /api/ipam/ipranges/12345/ipaddresses?page=1&size=20
+```

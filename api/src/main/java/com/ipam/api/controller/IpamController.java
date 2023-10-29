@@ -63,43 +63,6 @@ public class IpamController {
   private UserService userService;
 
   @GetMapping("/users")
-  @Operation(
-    summary = "Get all users",
-    description = "Get all users",
-    tags = { "users" },
-    security = @SecurityRequirement(
-      name = "bearerAuth",
-      scopes = { "ROLE_ADMIN" }
-    ),
-    responses = {
-      @ApiResponse(
-        responseCode = "200",
-        description = "All users",
-        content = @Content(
-          mediaType = "application/json",
-          array = @ArraySchema(schema = @Schema(implementation = UserDTO.class))
-        )
-      ),
-      @ApiResponse(
-        responseCode = "401",
-        description = "Unauthorized",
-        content = @Content(
-          extensions = {
-            @Extension(
-              name = "exception",
-              properties = {
-                @ExtensionProperty(
-                  name = "exception",
-                  value = "UnauthorizedException"
-                ),
-              }
-            ),
-          }
-        )
-      ),
-      @ApiResponse(responseCode = "403", description = "Forbidden"),
-    }
-  )
   @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
   public PageResponse<User> getUsers(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
     return userService.getAllUsers(page, size);
@@ -126,7 +89,7 @@ public class IpamController {
 
   @GetMapping("/users/{userId}/ipaddresses")
   @PreAuthorize(
-    "hasAuthority('SCOPE_ROLE_USER') or hasAuthority('SCOPE_ROLE_ADMIN')"
+    "hasAuthority('SCOPE_ROLE_USER')"
   )
   public PageResponse<IPAddress> getIpAddressesByUser(
     @PathVariable("userId") Long userId,
