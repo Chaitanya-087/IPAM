@@ -548,7 +548,7 @@ This endpoint retrieves a list of subnets. To access it, the user must have the 
 **Example Usage:**
 
 ```http
-  GET /api/ipam/subnets
+GET /api/ipam/subnets
 ```
 
 ### get subnets stat
