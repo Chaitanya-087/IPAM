@@ -102,9 +102,9 @@ In development environment application run on port 9090 that makes the url to be
 
 - `useAxiosPrivate` - custom hook is designed to provide a pre-configured Axios instance (`axiosPrivate``) for making private HTTP requests within a React application. It includes logic to handle authentication and authorization, ensuring that requests are made with the appropriate headers and aborting requests if the user is not authenticated.
 
-- `routes/${role}/pages/${page}` - are dynamic routes import on demand with respect to role of the user this is decided by `RoleGuard` component and this is used in `CreateBrowserRouter` to perform this base client side routing
+`routes/${role}/pages/${page}` - are dynamic routes import on demand with respect to role of the user this is decided by `RoleGuard` component and this is used in `CreateBrowserRouter` to perform this base client side routing
 
-- `routes/require-auth.jsx` - is a watch dog for a protected component that redirects to login page when ever the token expired are does not exist.
+`routes/require-auth.jsx` - is a watch dog for a protected component that redirects to login page when ever the token expired are does not exist.
 
 ## Important Packages
 
