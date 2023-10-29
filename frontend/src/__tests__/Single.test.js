@@ -2,7 +2,7 @@ import { Builder, By } from "selenium-webdriver";
 import chrome from "selenium-webdriver/chrome";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-const url = "http://localhost:5173";
+const url = "http://localhost:9090";
 
 describe("Selenium", () => {
     let driver;

@@ -49,7 +49,7 @@ function ActionButton(props) {
 }
 
 ActionButton.propTypes = {
-    id: PropTypes.string.isRequired,
+    id: PropTypes.number.isRequired,
     status: PropTypes.string.isRequired,
     fetchData: PropTypes.func.isRequired,
 };

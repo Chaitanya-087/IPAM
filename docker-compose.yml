@@ -8,15 +8,6 @@ services:
         restart: always
         depends_on:
             - api
-        volumes:
-            - ./frontend:/app
-        environment:
-            - CHOKIDAR_USEPOLLING=true
-            - GENERATE_SOURCEMAP=false
-            - INLINE_RUNTIME_CHUNK=false
-
-        tty: true
-
     api:
         build: ./api
         ports:
@@ -24,9 +15,6 @@ services:
         restart: always
         depends_on:
             - mysqldb
-        volumes:
-            - ./api:/app
-
         environment:
             - SPRING_DATASOURCE_URL=jdbc:mysql://mysqldb:3306/ipam?createDatabaseIfNotExist=true
             - SPRING_DATASOURCE_USERNAME=chaitanya
