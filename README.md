@@ -1,6 +1,6 @@
 # CheckList
 - [X] [BackEnd Docs](https://github.com/Chaitanya-087/IPAM/blob/main/api/api-docs.md)
-- [ ] [FrontEnd Docs](#task-2)
+- [X] [FrontEnd Docs](https://github.com/Chaitanya-087/IPAM/blob/main/frontend/README.md)
 - [X] [Database Layer](https://github.com/Chaitanya-087/IPAM/blob/main/api/ipam_ER_Diagram.png)
 - [X] [Test Report](https://github.com/Chaitanya-087/IPAM/blob/main/api/backend_test_coverage_report.png)
 
