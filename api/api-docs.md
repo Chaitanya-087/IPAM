@@ -39,46 +39,208 @@ the API endpoints are authorized by a `ROLE` which are ADMIN and USER roles.
 - **Description**: Generate Token for user
 - **Request Body**:
   - Content-Type: `application/json`
-  - Schema:
-    ```json
-    {
-     "username": "John Doe",
-     "password": "*********"
-    }
-    ```
+- **Schema:**
+```json
+{
+  "username": "John Doe",
+  "password": "*********"
+}
+```
 - **Responses**:
-  - 200: Token generated successfully
     - Content-Type: `application/json`
-    - Schema: 
-      ```json
-      {
-      "userId": 1,
-      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
-      "username": "John Doe"
-      }
-      ```
+- **Schema:** 
+```json
+{
+  "userId": 1,
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+  "username": "John Doe"
+}
+```
 
 ### /api/auth/signup
 
 #### POST `/api/auth/signup`
 
-- **Description**: Register a user
-- **Request Body**:
+- **Description:** Register a user
+- **Request Body:**
   - Content-Type: `application/json`
-  - Schema:
-    ```json
-    {
-    "username": "John Doe",
-    "email": "john234@gmail.com",
-    "password": "*******"
-    }
-    ```
+- **Schema:**
+```json
+{
+  "username": "John Doe",
+  "email": "john234@gmail.com",
+  "password": "*******"
+}
+```
 - **Responses**:
   - 200: OK
     - Content-Type: `application/json`
-    - Schema:
-    ```json
-    {
-    "message" : "User registered successfully!"
-    }
-    ```
+  - **Schema**:
+```json
+{
+  "message" : "User registered successfully!"
+}
+```
+### IPAM Endpoints (ADMIN) <a name="IPAM-ADMIN-endpoints"></a>
+
+**HTTP Method:** GET
+
+**Endpoint:** `/api/ipam/users`
+
+**Description:**
+This endpoint allows fetching a list of users. To access this endpoint, the user must have the 'SCOPE_ROLE_ADMIN' authority.
+
+**Request Parameters:**
+- `page` (Optional, Default: 0) - An integer indicating the page number.
+- `size` (Optional, Default: 10) - An integer indicating the page size.
+
+**Response:**
+- Content-Type: `application/json`
+- Schema:
+```json
+{
+    "totalPages": 0,
+    "currentPageSize": 0,
+    "maxPageSize": 10,
+    "currentPage": 0,
+    "hasNext": false,
+    "hasPrevoius": false,
+    "data": [
+              {
+                  "id": 1,
+                  "username": "name",
+                  "email": "john234@gmail.com",
+                  "password": "{bycrpt}********",  
+              }
+            ]
+}
+```
+
+**Example Usage:**
+```http
+GET /api/ipam/users?page=1&size=20
+```
+
+## Method: addIpAddress
+
+**HTTP Method:** POST
+
+**Endpoint:** `/api/ipam/ipaddresses`
+
+**Description:**
+This endpoint allows adding a new IP address. To access this endpoint, the user must have the 'SCOPE_ROLE_ADMIN' authority.
+
+**Request Body:**
+- **Content-Type:** `application/json`
+- **Schema:**
+```json
+{
+  "address": "192.168.0.1"
+}
+```
+**Response Body:**
+- **Content-Type:** `application/json`
+- **Schema:**
+```json
+{
+  "id": 1,
+  "user": null,
+  "status": "AVAILABLE",
+  "createdAt": "2023-10-28T14:30:00Z",
+  "updatedAt": "2023-10-28T14:30:00Z",
+  "expiration": null,
+  "dns": null,
+  "address": "192.168.0.1"
+}
+```
+## Method: getIpAddresses
+
+**HTTP Method:** GET
+
+**Endpoint:** `/api/ipam/ipaddresses`
+
+**Description:**
+This endpoint allows fetching a list of IP addresses. To access this endpoint, the user must have the 'SCOPE_ROLE_ADMIN' authority.
+
+**Request Parameters:**
+- `page` (Optional, Default: 0) - An integer indicating the page number.
+- `size` (Optional, Default: 10) - An integer indicating the page size.
+
+**Response Body:**
+- **Content-Type:** `application/json`.
+- **Schema:**
+```json
+  {
+    "totalPages": 0,
+    "currentPageSize": 0,
+    "maxPageSize": 10,
+    "currentPage": 0,
+    "hasNext": false,
+    "hasPrevious": false,
+    "data": [
+      {
+        "id": 1,
+        "user": {
+          "id": 1001,
+          "username": "John Doe",
+          "email": "john234@gmail.com",
+          "password": "*********"
+        },
+        "status": "AVAILABLE",
+        "createdAt": "2023-10-28T14:30:00Z",
+        "updatedAt": "2023-10-28T14:30:00Z",
+        "expiration": null,
+        "dns": null,
+        "address": "192.168.0.1"
+      }
+    ]
+}    
+```
+**Example Usage:**
+```http
+GET /api/ipam/ipaddresses?page=1&size=20
+```
+
+**HTTP Method:** GET
+
+**Endpoint:** `/api/ipam/admin/ip-scan`
+
+**Description:**
+This endpoint allows administrators to retrieve statistics related to IP addresses. Access to this endpoint requires the 'SCOPE_ROLE_ADMIN' authority.
+
+**Response Body:**
+- **Content-Type:** `application/json`
+- **Schema:**
+```json
+{
+  "reservedCount": 4,
+  "inuseCount": 23,
+  "availableCount": 245
+}
+```
+**Example Usage:**
+```http
+GET /api/ipam/admin/ip-scan
+```
+
+## Method: addIPRange
+
+**HTTP Method:** POST
+
+**Endpoint:** `/ipranges`
+
+**Description:**
+This endpoint allows administrators to add an IP range. Access to this endpoint requires the 'SCOPE_ROLE_ADMIN' authority.
+
+**Request Body:**
+- Content-Type: `application/json`
+- Schema:
+```json
+{
+  
+}
+```
+**Response:**
+- Content-Type: `application/json`
+- Status Code: 201 (Created)
+- Schema: [IPRangeDTO](#iprangedto)
