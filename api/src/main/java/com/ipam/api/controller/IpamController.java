@@ -8,7 +8,6 @@ import com.ipam.api.dto.PageResponse;
 import com.ipam.api.dto.StatDTO;
 import com.ipam.api.dto.SubnetDTO;
 import com.ipam.api.dto.SubnetForm;
-import com.ipam.api.dto.UserDTO;
 import com.ipam.api.entity.IPAddress;
 import com.ipam.api.entity.IPRange;
 import com.ipam.api.entity.Reservation;
@@ -19,15 +18,6 @@ import com.ipam.api.service.IPRangeService;
 import com.ipam.api.service.ReservationService;
 import com.ipam.api.service.SubnetService;
 import com.ipam.api.service.UserService;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.extensions.Extension;
-import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import java.io.IOException;
 
@@ -107,7 +97,7 @@ public class IpamController {
   ) {
     return ipAddressService.findAllAvailable(page, size);
   }
-
+  //here
   @PostMapping("/allocate/ipaddresses/{ipAddressId}/users/{userId}")
   @PreAuthorize("hasAuthority('SCOPE_ROLE_USER')")
   public ResponseEntity<MessageResponse> allocateIpAddress(
@@ -261,33 +251,6 @@ public class IpamController {
   }
 
   @GetMapping("/reservations")
-  @Operation(summary = "all reservations", description = "gets all reservations", responses = {
-    @ApiResponse(
-      responseCode = "200",
-      description = "All reservations",
-      content = @Content(
-        mediaType = "application/json",
-        schema = @Schema(implementation = PageResponse.class))
-    ),
-    @ApiResponse(
-      responseCode = "401",
-      description = "Unauthorized",
-      content = @Content(
-        extensions = {
-          @Extension(
-            name = "exception",
-            properties = {
-              @ExtensionProperty(
-                name = "exception",
-                value = "UnauthorizedException"
-              ),
-            }
-          ),
-        }
-      )
-    ),
-    @ApiResponse(responseCode = "403", description = "Forbidden"),
-  })
   @PreAuthorize("hasAuthority('SCOPE_ROLE_ADMIN')")
   public PageResponse<Reservation> adminReservationScan(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
     return reservationService.findAll(page, size);

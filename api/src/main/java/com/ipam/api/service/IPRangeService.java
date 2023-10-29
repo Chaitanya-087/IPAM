@@ -142,14 +142,6 @@ public class IPRangeService {
     );
   }
 
-  public StatDTO getStats() {
-    StatDTO stat = new StatDTO();
-    stat.setAvailableCount(ipRangeRepository.countByStatus(Status.AVAILABLE));
-    stat.setInuseCount(ipRangeRepository.countByStatus(Status.IN_USE));
-    stat.setReservedCount(ipRangeRepository.countByStatus(Status.RESERVED));
-    return stat;
-  }
-
   private IPRangeDTO convertToDTO(IPRange ipRange) {
     IPRangeDTO ipRangeDTO = new IPRangeDTO();
     ipRangeDTO.setId(ipRange.getId());
@@ -198,4 +190,11 @@ public class IPRangeService {
     return response;
   }
 
+    public StatDTO getStats() {
+    StatDTO stat = new StatDTO();
+    stat.setAvailableCount(ipRangeRepository.countByStatus(Status.AVAILABLE));
+    stat.setInuseCount(ipRangeRepository.countByStatus(Status.IN_USE));
+    stat.setReservedCount(ipRangeRepository.countByStatus(Status.RESERVED));
+    return stat;
+  }
 }

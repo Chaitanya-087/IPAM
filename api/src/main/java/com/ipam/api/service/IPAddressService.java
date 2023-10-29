@@ -106,7 +106,7 @@ public class IPAddressService {
 
   public String assignDomainName(long ipAddresId) throws IOException {
     Optional<IPAddress> ipAddressOpt = ipAddressRepository.findById(ipAddresId);
-    if (ipAddressOpt.isPresent()) {
+    if (ipAddressOpt.isPresent() && ipAddressOpt.get().getStatus().equals(Status.IN_USE)) {
       IPAddress ipAddress = ipAddressOpt.get();
       ipAddress.setDns(generateRandomString().concat(".pro"));
       ipAddressRepository.save(ipAddress);

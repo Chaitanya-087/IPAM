@@ -9,10 +9,13 @@
         "Ikpva",
         "Qssw",
         "XVCJ",
-        "application"
+        "application",
+        "iprange",
+        "subnets"
     ],
     "cSpell.words": [
         "inuse",
+        "ipaddress",
         "ipam",
         "ipranges"
     ]

@@ -217,6 +217,7 @@ class IPAddressServiceUnitTest {
   void givenValidIPAddressId_whenAssignDomainName_thenDomainNameAssigned()
     throws IOException {
     String testWord = "test";
+    ipAddress.setStatus(Status.IN_USE);
     InputStream inputStream = new ByteArrayInputStream(testWord.getBytes());
     Resource resource = mock(Resource.class);
 
