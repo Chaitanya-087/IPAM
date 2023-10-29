@@ -76,3 +76,222 @@ The scope of this project includes the development of a Java application using J
 
 ### 3.3 Swagger Documentation
 - The system should include Swagger documentation for API endpoints.
+
+# OpenAPI definition
+
+This is an OpenAPI (v3.0.1) specification for an API. It defines various paths and components used by the API.
+
+## Servers
+
+- **Generated server URL:** `[http://localhost:8080](http://localhost:8080)`
+
+## Security
+
+- **Bearer Authentication**: This API uses Bearer Authentication for security.
+
+## Paths
+
+### /api/ipam/subnets
+
+#### GET `/api/ipam/subnets`
+
+- **Description**: Get all Subnet Data Transfer Objects
+- **Parameters**:
+  - `page` (optional, integer, default: 0)
+  - `size` (optional, integer, default: 10)
+- **Responses**:
+  - 200: OK
+    - Content-Type: `*/*`
+    - Schema: `PageResponseSubnet`
+
+#### POST `/api/ipam/subnets`
+
+- **Description**: Add a Subnet
+- **Request Body**:
+  - Content-Type: `application/json`
+  - Schema: `SubnetForm`
+- **Responses**:
+  - 200: OK
+    - Content-Type: `*/*`
+    - Schema: `SubnetDTO`
+
+### /api/ipam/reserve/network-object/{id}
+
+#### POST `/api/ipam/reserve/network-object/{id}`
+
+- **Description**: Reserve a network object by ID
+- **Parameters**:
+  - `id` (required, integer)
+- **Request Body**:
+  - Content-Type: `application/json`
+  - Schema: `Reservation`
+- **Responses**:
+  - 200: OK
+    - Content-Type: `*/*`
+    - Schema: `MessageResponse`
+
+### /api/ipam/ipranges
+
+#### GET `/api/ipam/ipranges`
+
+- **Description**: Get all IP Range Data Transfer Objects
+- **Parameters**:
+  - `page` (optional, integer, default: 0)
+  - `size` (optional, integer, default: 10)
+- **Responses**:
+  - 200: OK
+    - Content-Type: `*/*`
+    - Schema: `PageResponseIPRange`
+
+#### POST `/api/ipam/ipranges`
+
+- **Description**: Add an IP Range
+- **Request Body**:
+  - Content-Type: `application/json`
+  - Schema: `IPRangeForm`
+- **Responses**:
+  - 200: OK
+    - Content-Type: `*/*`
+    - Schema: `IPRangeDTO`
+
+### /api/ipam/ipaddresses
+
+#### GET `/api/ipam/ipaddresses`
+
+- **Description**: Get IP Addresses
+- **Parameters**:
+  - `page` (optional, integer, default: 0)
+  - `size` (optional, integer, default: 10)
+- **Responses**:
+  - 200: OK
+    - Content-Type: `*/*`
+    - Schema: `PageResponseIPAddress`
+
+#### POST `/api/ipam/ipaddresses`
+
+- **Description**: Add an IP Address
+- **Request Body**:
+  - Content-Type: `application/json`
+  - Schema: `IPAddressForm`
+- **Responses**:
+  - 200: OK
+    - Content-Type: `*/*`
+    - Schema: `IPAddress`
+
+### /api/ipam/ipaddresses/{ipAddressId}/dns
+
+#### POST `/api/ipam/ipaddresses/{ipAddressId}/dns`
+
+- **Description**: Assign DNS to an IP Address
+- **Parameters**:
+  - `ipAddressId` (required, integer)
+- **Responses**:
+  - 200: OK
+    - Content-Type: `*/*`
+    - Schema: `MessageResponse`
+
+### /api/ipam/allocate/subnets/{subnetId}/users/{userId}
+
+#### POST `/api/ipam/allocate/subnets/{subnetId}/users/{userId}`
+
+- **Description**: Allocate a subnet to a user
+- **Parameters**:
+  - `subnetId` (required, integer)
+  - `userId` (required, integer)
+- **Responses**:
+  - 200: OK
+    - Content-Type: `*/*`
+    - Schema: `MessageResponse`
+
+### /api/ipam/allocate/ipranges/{ipRangeId}/users/{userId}
+
+#### POST `/api/ipam/allocate/ipranges/{ipRangeId}/users/{userId}`
+
+- **Description**: Allocate an IP range to a user
+- **Parameters**:
+  - `ipRangeId` (required, integer)
+  - `userId` (required, integer)
+- **Responses**:
+  - 200: OK
+    - Content-Type: `*/*`
+    - Schema: `MessageResponse`
+
+### /api/ipam/allocate/ipaddresses/{ipAddressId}/users/{userId}
+
+#### POST `/api/ipam/allocate/ipaddresses/{ipAddressId}/users/{userId}`
+
+- **Description**: Allocate an IP address to a user
+- **Parameters**:
+  - `ipAddressId` (required, integer)
+  - `userId` (required, integer)
+- **Responses**:
+  - 200: OK
+    - Content-Type: `*/*`
+    - Schema: `MessageResponse`
+
+### /api/auth/token
+
+#### POST `/api/auth/token`
+
+- **Description**: Generate Token for user
+- **Request Body**:
+  - Content-Type: `application/json`
+  - Schema: `LoginBody`
+- **Responses**:
+  - 200: Token generated successfully
+    - Content-Type: `application/json`
+    - Schema: `JwtResponse`
+  - 400: Invalid username/password supplied
+    - Content-Type: `*/*`
+    - Schema: `JwtResponse`
+  - 401: Unauthorized
+    - Content-Type: `*/*`
+    - Schema: `JwtResponse`
+  - 404: User not found
+    - Content-Type: `*/*`
+    - Schema: `JwtResponse`
+
+### /api/auth/signup
+
+#### POST `/api/auth/signup`
+
+- **Description**: Register a user
+- **Request Body**:
+  - Content-Type: `application/json`
+  - Schema: `SignupBody`
+- **Responses**:
+  - 200: OK
+    - Content-Type: `*/*`
+    - Schema: `MessageResponse`
+
+### /api/ipam
+
+#### GET `/api/ipam`
+
+- **Description**: Hello
+- **Responses**:
+  - 200: OK
+    - Content-Type: `*/*`
+    - Schema: string
+
+### /api/ipam/users
+
+#### GET `/api/ipam/users`
+
+- **Description**: Get all users
+- **Parameters**:
+  - `page` (optional, integer, default: 0)
+  - `size` (optional, integer, default: 10)
+- **Responses**:
+  - 200: All users
+    - Content-Type: `application/json`
+    - Schema: `PageResponseUser`
+  - 401: Unauthorized
+    - Content-Type: `*/*`
+    - Exception: UnauthorizedException
+  - 403: Forbidden
+    - Content-Type: `*/*`
+    - Schema: `PageResponseUser`
+
+### /api/ipam
+
